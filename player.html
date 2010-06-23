@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+	<head>
+	  <!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->
+		<script type="text/javascript" src="datastore.js"></script>
+		<script type="text/javascript" src="inflate.js"></script>
+		<script type="text/javascript" src="b64.js"></script>
+		<script type="text/javascript" src="canvas.js"></script>
+	</head>
+	<body>
+		<canvas id="playback" width="0" height="0">
+			Your browser doesn't support the magic
+		</canvas>  
+		<script type="text/javascript">
+			var ds = new Datastore("stick2beta");
+			var id = window.location.search.substr(1);
+			if(!id){
+				document.body.innerHTML = "Please load animation first TODO: make a pretteir error message"
+			}
+			ds.first(id, function(data){
+			  if(data.data.substr(0,3) == "UKG"){
+          data.data = ZInflate(decode64(data.data.substr(3)));
+			  }
+			  var src = eval("("+data.data+")");
+				
+				expand_save(src);
+				play = true;
+				play_loop();
+				
+				document.getElementById('controls').style.display = '';
+			})
+			
+			var canvas = document.getElementById("playback");
+			if(canvas.getContext){
+				context = canvas.getContext('2d')
+			}
+
+			framestore = []; //notice this is an array, not a object
+			stage = {x:0,y:0,width:0,height:0}; //x, y, width, height
+			fps = 12;
+			
+			function expand_save(obj){
+				var fs = [];
+				for(var i = 0; i < obj.data.length; i++){
+					fs[i] = [];
+					for(var s = 0; s < obj.data[i].length; s++){
+						fs[i].push(inflate_shape(obj.data[i][s]));
+					}
+				}
+				window.framestore = fs;
+				window.stage = obj.stage;
+				window.fps = obj.fps;
+				canvas.width = stage.width;
+				canvas.height = stage.height;
+				//load_animation(fs)
+			}
+			
+
+			
+			current_frame = -1; 
+			play = true;
+			paused = false;
+			
+			function play_loop(){
+				if(!play) return;
+				if(!paused){
+				  if(!framestore[++current_frame]) current_frame = 0;
+				  canvas_render_frame(current_frame, context);
+				}
+				setTimeout(play_loop, 1000/fps)
+			}
+			
+			
+
+			function inflate_shape(obj){
+				var map = {
+					"r": "root",
+					"l": "line",
+					"c": "circle"
+				};
+				var shape = {};
+				shape.type = map[obj[0]];
+				if(obj[0] == "r"){
+					shape.pos = [obj[1],obj[2]]
+					shape.angle = obj[3]
+					shape.children = obj[4]
+
+				}else{
+					shape.length = obj[1]
+					shape.width = obj[2]
+					shape.color = obj[3]
+					shape.angle = obj[4]
+					shape.children = obj[5]
+			  }
+				for(var i = 0; i < shape.children.length; i++){
+					shape.children[i] = inflate_shape(shape.children[i])
+				}
+				return shape;
+			}
+			
+
+
+		</script>
+		<div id='controls' style='display:none'>
+		<button onclick='paused=!paused;'>Pause/Play</button>
+		<button onclick='location="http://antimatter15.com/ajaxanimator/stick2/stick2.html"+location.search'>Edit</button>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,100 @@
+13c13,15
+< <meta name = "viewport" content = "user-scalable=no, width=device-height">
+---
+> <meta name = "viewport" content = "user-scalable=no, width=device-width"> 
+> <meta name="apple-mobile-web-app-capable" content="yes"> 
+>  
+55,57c57,59
+<       	x: 180,
+<       	y: 100, //TODO: ste proportionally to size
+<       	width: 400,
+---
+>       	x: 10,
+>       	y: 50, //TODO: ste proportionally to size
+>       	width: 300,
+684a687
+>         
+694a698,699
+> 				$('#figcont').hide()
+>         
+730c735
+<       $("#figcont").css("height",($(window).height() - 180) + "px")
+---
+>       $("#figcont").css("height",($(window).height() - 40) + "px")
+734a740,741
+>       $(frame_el[num]).html("<span style='margin-top:50px;margin-left:25px'>"+(num+1)+"</span>").css("font-size","80px").css("color", "#bbbbbb")
+>       /*
+761a769
+>       */
+1180d1187
+<       padding: 30px;
+1184c1191
+<   <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:hidden;background-color: #DFE8F6;" id="figcont">
+---
+>   <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:hidden;background-color: #DFE8F6;display:none" id="figcont"> 
+1206a1214,1216
+> 	<div style="float:left" onclick="$('#figcont').toggle()"> 
+>   <img src="archive-insert.png"> 
+> 	</div> 
+1208c1218,1240
+< 	<div style="padding-left: 70px; padding-right: 30px; display:none;float: left" class="infobox"> 
+---
+> 	<div style="float:left" onclick="$('#timecont').toggle()"> 
+> 	  <img src="view-time-schedule.png"> 
+> 	</div> 
+> 	
+>  
+> 			  <div style="float: right"> 
+> <span class="delete shape_selected"><img src="edit-delete.png"></span> 
+>       
+>        
+>  
+> 			<span id="lockswitch"> 
+> 			<img src="object-locked.png" id="locked"> 
+> 			<img src="object-unlocked.png" id="unlocked" style="display:none"> 
+> 			</span> 
+> 			
+> 			<span onclick="$('#about').show()"><img src="help-about.png"></span> 
+> 			</div> 
+>   </div> 
+>  
+>   
+>   <div style="height: 35px;position:absolute;bottom:0;left:0;width:100%;background-color: #9FCEFC;"> 
+>   
+>   	<div style="padding-left: 5px; padding-right: 5px; display:none;float: left" class="infobox"> 
+1218,1220c1250,1252
+<       <div style="float:left;margin-top: 7px;font-size: large">
+<     <span><b>Angle:</b> <span id="angle"></span>&deg;</span>
+<     <span><b>Length:</b> <span id="length"></span>px</span>
+---
+>       <div style="float:left;margin-top: 7px;font-size: normal"> 
+>     <span><b>Ang:</b> <span id="angle"></span>&deg;</span> 
+>     <span><b>Len:</b> <span id="length"></span>px</span> 
+1223c1255
+<     <div style="float:left;margin-left: 10px">
+---
+>     <div style="float:left;margin-left: 5px"> 
+1233,1243d1264
+< 			  <div style="float: right">
+< 
+<       
+<        <span class="delete shape_selected"><img src="edit-delete.png"></span> 
+< 
+< 			<span id="lockswitch">
+< 			<img src="object-locked.png" id="locked">
+< 			<img src="object-unlocked.png" id="unlocked" style="display:none">
+< 			</span>
+< 			
+< 			<span onclick="$('#about').show()"><img src="help-about.png"></span> 
+1245,1249c1266
+<   </div>
+< 
+<   
+< 
+<   <div style="height: 129px;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
+---
+>   <div style="height: 129px;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;display:none"  id="timecont"> 
+1267a1285
+> <div style="padding: 30px"> 
+1270a1289
+> </div> 

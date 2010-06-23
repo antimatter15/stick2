@@ -1,0 +1,26 @@
+<input id="key">
+<br>
+<script  src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<textarea style="width: 80%; height: 600px" onkeyup="update(this.value)"></textarea>
+<br>
+<textarea id="out" style="width: 80%; height: 600px" ></textarea>
+<script>
+var Tea={};Tea.encrypt=function(b,d){if(b.length==0)return"";var a=Tea.strToLongs(b);if(a.length<=1)a[1]=0;for(var k=Tea.strToLongs(d.slice(0,16)),f=a.length,c=a[f-1],g=a[0],i,h=Math.floor(6+52/f),e=0;h-- >0;){e+=2654435769;i=e>>>2&3;for(var j=0;j<f;j++){g=a[(j+1)%f];c=(c>>>5^g<<2)+(g>>>3^c<<4)^(e^g)+(k[j&3^i]^c);c=a[j]+=c}}a=Tea.longsToStr(a);return encode64(a)};
+Tea.decrypt=function(b,d){if(b.length==0)return"";for(var a=Tea.strToLongs(decode64(b)),k=Tea.strToLongs(d.slice(0,16)),f=a.length,c=a[f-1],g=a[0],i,h=Math.floor(6+52/f)*2654435769;h!=0;){i=h>>>2&3;for(var e=f-1;e>=0;e--){c=a[e>0?e-1:f-1];c=(c>>>5^g<<2)+(g>>>3^c<<4)^(h^g)+(k[e&3^i]^c);g=a[e]-=c}h-=2654435769}a=Tea.longsToStr(a);return a=a.replace(/\0+$/,"")};
+Tea.strToLongs=function(b){for(var d=new Array(Math.ceil(b.length/4)),a=0;a<d.length;a++)d[a]=b.charCodeAt(a*4)+(b.charCodeAt(a*4+1)<<8)+(b.charCodeAt(a*4+2)<<16)+(b.charCodeAt(a*4+3)<<24);return d};Tea.longsToStr=function(b){for(var d=new Array(b.length),a=0;a<b.length;a++)d[a]=String.fromCharCode(b[a]&255,b[a]>>>8&255,b[a]>>>16&255,b[a]>>>24&255);return d.join("")};
+</script>
+<script>
+
+                                                                                        keystr="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+_=";function encode64(a){var b=new Array(Math.floor((a.length+2)/3)*4),c,d,f,g,h,e,i=0,j=0;do{c=a.charCodeAt(i++);d=a.charCodeAt(i++);f=a.charCodeAt(i++);g=c>>2;c=(c&3)<<4|d>>4;h=(d&15)<<2|f>>6;e=f&63;if(isNaN(d))h=e=64;else if(isNaN(f))e=64;b[j++]=this.keystr.charAt(g);b[j++]=this.keystr.charAt(c);b[j++]=this.keystr.charAt(h);b[j++]=this.keystr.charAt(e)}while(i<a.length);return b.join("")}
+function decode64(a){a=a.replace(/\//g,"_");var b="",c,d,f="",g,h="",e=0;do{c=this.keystr.indexOf(a.charAt(e++));d=this.keystr.indexOf(a.charAt(e++));g=this.keystr.indexOf(a.charAt(e++));h=this.keystr.indexOf(a.charAt(e++));c=c<<2|d>>4;d=(d&15)<<4|g>>2;f=(g&3)<<6|h;b+=String.fromCharCode(c);if(g!=64)b+=String.fromCharCode(d);if(h!=64)b+=String.fromCharCode(f)}while(e<a.length);return unescape(b)};                                                                                                                                          
+                                                                                        SHA1=function(l){function p(b,a){return b<<a|b>>>32-a}l+="\u0080";for(var n=Math,c=[1518500249,1859775393,2400959708,3395469782,1732584193,4023233417,2562383102,271733878,3285377520,4294967295],s=n.ceil(l.length/4)+2,q=n.ceil(s/16),g=[],a=0,h=[],j,d,e,f,m,i,b,k;a<q;a++){g[a]=[];for(k=0;k<16;k++){function o(b,c){return l.charCodeAt(a*64+k*4+b)<<c}g[a][k]=o(0,24)|o(1,16)|o(2,8)|o(3,0)}}i=l.length*8-8;a=q-1;g[a][14]=i/(c[9]+1);g[a][14]=n.floor(g[a][14]);g[a][15]=i&c[9];for(a=0;a<q;a++){for(b=0;b<16;b++)h[b]=g[a][b];for(b=16;b<80;b++)h[b]=p(h[b-3]^h[b-8]^h[b-14]^h[b-16],1);j=c[4];d=c[5];e=c[6];f=c[7];m=c[8];for(b=0;b<80;b++){var r=n.floor(b/20),t=p(j,5)+(r<1?d&e^~d&f:r==2?d&e^d&f^e&f:d^e^f)+m+c[r]+h[b]&c[9];m=f;f=e;e=p(d,30);d=j;j=t}c[4]+=j;c[5]+=d;c[6]+=e;c[7]+=f;c[8]+=m}i="";for(z=4;z<9;z++)for(a=7;a>=0;a--)i+=((c[z]&c[9])>>>a*4&15).toString(16);return i};
+
+</script>
+
+<script>
+  function update(val){
+  var name = $("#key").val();
+var key = SHA1(name+Math.PI.toFixed(6)+Math.E.toFixed(9)+'42').substr(5,16);
+    $("#out").val("'"+key+"':'"+Tea.encrypt(val, SHA1(name+key))+"'");
+  }
+</script>
