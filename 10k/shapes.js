@@ -1,6 +1,7 @@
 function svg(el, parent){
   var attr = arguments[arguments.length-1];
-  if(!parent || !type){
+  if(!parent || !el){
+    console.log(parent, el);
     throw "Error: Parent and type can not be null"
   }else if(parent.appendChild){
     el = document.createElementNS("http://www.w3.org/2000/svg", el);
@@ -27,9 +28,9 @@ function ScaledFigure(draw, src, scale){
   //they all go down to a root point, which has no parent.
   this.root = new Root(src.angle, src.pos, true, draw);
   var scale = scale||1.0;
-  var allset = this.root.draw.set()
+  var allset = svg('g',this.root.draw)
   this.allset = allset;
-  this.root.pos = [this.root.pos[0] * scale, this.root.pos[1] * scale];
+  this.root._pos = [this.root._pos[0] * scale, this.root._pos[1] * scale];
   //this.root.shape.scale(0.1,0.1,0,0)
   (function(parent, children){
     for(var i = 0; i < children.length; i++){
@@ -39,7 +40,7 @@ function ScaledFigure(draw, src, scale){
       }else if(child.type == "circle"){
         var el = new Circle(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
       }
-      allset.push(el.shape)
+      allset.appendChild(el.shape)
       arguments.callee(el, child.children); //recurse
     }
   })(this.root, src.children);
@@ -88,10 +89,11 @@ Figure.prototype.save = function(){
 
 function createShapeHandle(shape, color){
   (shape.end = svg('circle', shape.draw, {
-    fill: color || 'red'
+    fill: color || 'red',
+    r: 8
   })).on('mousedown',function(e){ //not very memsafe
-    if(!e.button && !e.ctrlKey) current_shape = point;
-    selected_shape = point;
+    if(!e.button && !e.ctrlKey) current_shape = shape;
+    selected_shape = shape;
   })
 }
 
@@ -291,7 +293,7 @@ var circleproto = Circle.prototype = new Shape();
 circleproto.render = function(){
   var anchor = this.anchor.pos()
   var end = this.pos();
-  svg(this.shape, {r: this.length/2, cx: (anchor[0]+end[0])/2, cy: (anchor[1]+end[1])/2, 'stroke-width': this.width+'px', stroke: this.color});
+  svg(this.shape, {r: this.length/2, cx: (anchor[0]+end[0])/2, cy: (anchor[1]+end[1])/2, 'stroke-width': this.width+'px', stroke: this.color, fill: 'none'});
   if(this.end) svg(this.end, {cx: end[0], cy: end[1]}).toFront();
 }
 

@@ -2,26 +2,19 @@
 <html>
 <head>
   <title>Stick2 &alpha;</title>
-  <style>
-  body{
-        font-family: arial, sans-serif;
-        font-size: 13px;
-        background-color: #DFE8F6;
-  }
-</style>
 
-<meta name = "viewport" content = "user-scalable=no, width=device-height">
-<meta name="apple-mobile-web-app-capable" content="yes"> 
 
 </head>
 <body style="margin: 0; border: 0; padding: 0;overflow:hidden">
   <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
 
-  <script type="text/javascript" src="shapes.js"></script>
-    <script type="text/javascript" src="main.js"></script>
+
   <style>
     body {
       -webkit-user-select: none;
+        font-family: arial, sans-serif;
+        font-size: 13px;
+        background-color: #DFE8F6;
     }
 		
     #timeline td {
@@ -108,7 +101,7 @@
       padding: 30px;
 		}
 		
-		#pausebutton, #unlocked {
+		#unlocked {
 		  display: none;
 		}
 </style>
@@ -119,8 +112,7 @@
   
   <div class="header">	
 		<div id="playpause" style="float: left;padding-left:10px;padding-right: 5px">
-      <div id="playbutton">&#9654;</div>
-      <div id="pausebutton">&#9632;</div>
+		&#9654;
 		</div>
 	<button style="float:left;padding-right: 5px" onclick="upload_animation()">Share</button>
   
@@ -134,21 +126,17 @@
   </div>
 	<div id="info" style="float: left;display:none">
     <div style="float:left;margin-top: 7px;font-size: large">
+     <span id="type"></span>
      <span><b>Angle:</b> <span id="angle"></span>&deg;</span>
      <span><b>Length:</b> <span id="length"></span>px</span>
      <span><b>Width:</b> <span id="width"></span>px</span>
-    </div>
-    <div style="float:left;margin-left: 10px">
-      <b id="color">Color</b>
+     <b id="color">Color</b>
     </div>
 	</div>
   <button class="makefig" id="rootinfo" style="float:left;display:none">Add to Library</button>
   <div style="float: right">
     <button class="delete" id='delete'>Delete</button> 
-		<span id="lockswitch">
-  		<button id="locked">Unlock</button>
-  		<button id="unlocked">Lock</button>
-		</span>		
+		<button id="lockswitch">Unlock</button>		
 		<a href="http://antimatter15.com">antimatter15.com</a>
 	</div>
 </div>
@@ -172,7 +160,8 @@
 </div>
 
 
-
+  <script type="text/javascript" src="shapes.js"></script>
+    <script type="text/javascript" src="main.js"></script>
 
 </body>
 </html>
