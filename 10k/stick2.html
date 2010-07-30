@@ -17,9 +17,8 @@
 <body style="margin: 0; border: 0; padding: 0;overflow:hidden">
   <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
 
-  <script type="text/javascript">    
-
-  </script>
+  <script type="text/javascript" src="shapes.js"></script>
+    <script type="text/javascript" src="main.js"></script>
   <style>
     body {
       -webkit-user-select: none;
@@ -108,28 +107,29 @@
       top: 0px; left: 0px; position: absolute;
       padding: 30px;
 		}
+		
+		#pausebutton, #unlocked {
+		  display: none;
+		}
 </style>
-<link href="touchscroll.css" rel="stylesheet"> 
 
-  <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:hidden;background-color: #DFE8F6;" id="figcont">
+  <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:auto;background-color: #DFE8F6;" id="figcont">
     <div style="overflow:hidden" id="figures"></div>
   </div>
   
   <div class="header">	
 		<div id="playpause" style="float: left;padding-left:10px;padding-right: 5px">
-      <img src="noatunplay.png" id="playbutton">
-      <img src="noatunpause.png" id="pausebutton" style="display:none">
+      <div id="playbutton">&#9654;</div>
+      <div id="pausebutton">&#9632;</div>
 		</div>
-	<div style="float:left;padding-right: 5px" onclick="upload_animation()">
-    <img src="svn-commit.png">
-	</div>
-  <div style="float:left" onclick="download_animation(prompt('animation id'))">
-    <img src="document-open-remote.png">
-	</div>
-	<div style="padding-left: 70px; padding-right: 30px; display:none;float: left" class="infobox"> 
+	<button style="float:left;padding-right: 5px" onclick="upload_animation()">Share</button>
+  
+	<div style="padding-left: 70px; padding-right: 30px; display:none;float: left" id="infobox"> 
 	  <div style="background-color: #7ca0a5; -webkit-border-radius: 5px;height: 32px;">
-      <img class="line" src="draw-line.png">
-      <img class="circle" src="draw-circle.png">
+      Attach 
+      <button id="line">Line</button>
+      <button id="circle">Circle</button>
+
     </div>
   </div>
 	<div id="info" style="float: left;display:none">
@@ -139,24 +139,22 @@
      <span><b>Width:</b> <span id="width"></span>px</span>
     </div>
     <div style="float:left;margin-left: 10px">
-      <span id="color"><img src="fill-color.png"></span>
+      <b id="color">Color</b>
     </div>
 	</div>
-  <div id="rootinfo" style="float:left;display:none">
-    <img class="makefig" src="bookmark-new.png">
-  </div>
+  <button class="makefig" id="rootinfo" style="float:left;display:none">Add to Library</button>
   <div style="float: right">
-    <span class="delete shape_selected"><img src="edit-delete.png"></span> 
+    <button class="delete" id='delete'>Delete</button> 
 		<span id="lockswitch">
-  		<img src="object-locked.png" id="locked">
-  		<img src="object-unlocked.png" id="unlocked" style="display:none">
+  		<button id="locked">Unlock</button>
+  		<button id="unlocked">Lock</button>
 		</span>		
-		<span onclick="$('#about').show()"><img src="help-about.png"></span> 
+		<a href="http://antimatter15.com">antimatter15.com</a>
 	</div>
 </div>
 
-<div style="height: 129px;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
-  <div style="height: 129px;position: absolute;overflow:hidden; width: 100%;border: 0; margin: 0; padding: 0;" id="timescroll">
+<div style="height: 147px;overflow-x:scroll;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
+  <div style="height: 129px;position: absolute;overflow:visible; width: 100%;border: 0; margin: 0; padding: 0;" id="timescroll">
     <table style="border: 0; margin: 0; padding: 0">
       <tbody style="border: 0; margin: 0; padding: 0;">
       <tr style="border: 0; margin: 0; padding: 0" id="timeline">
@@ -173,14 +171,8 @@
   </div>
 </div>
 
-<div id="about" style="display:none;" onclick="$('#about').hide()">
-  <h1>About</h1>
-  Hi
-</div>
 
-<div id="colorpicker" style="top: 0px; left: 0px; position: absolute;display:none">
-  <button onclick="picked_color()" style="font-size: xx-large">Done</button>
-</div>
+
 
 </body>
 </html>

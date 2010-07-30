@@ -21,6 +21,33 @@ Element.prototype.toFront = function(){
   this.parentNode.appendChild(this)
 }
 
+function ScaledFigure(draw, src, scale){
+  //a figure is composed of lines or circles
+  //each line/circle contains 2 points, one flexible, one anchored to another point
+  //they all go down to a root point, which has no parent.
+  this.root = new Root(src.angle, src.pos, true, draw);
+  var scale = scale||1.0;
+  var allset = this.root.draw.set()
+  this.allset = allset;
+  this.root.pos = [this.root.pos[0] * scale, this.root.pos[1] * scale];
+  //this.root.shape.scale(0.1,0.1,0,0)
+  (function(parent, children){
+    for(var i = 0; i < children.length; i++){
+      var child = children[i]
+      if(child.type == "line"){
+        var el = new Line(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
+      }else if(child.type == "circle"){
+        var el = new Circle(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
+      }
+      allset.push(el.shape)
+      arguments.callee(el, child.children); //recurse
+    }
+  })(this.root, src.children);
+  
+  this.root.renderAll();
+}
+
+
 function Figure(src, draw){
   //a figure is composed of lines or circles
   //each line/circle contains 2 points, one flexible, one anchored to another point
@@ -62,10 +89,10 @@ Figure.prototype.save = function(){
 function createShapeHandle(shape, color){
   (shape.end = svg('circle', shape.draw, {
     fill: color || 'red'
-  })).mousedown = function(e){ //not very memsafe
+  })).on('mousedown',function(e){ //not very memsafe
     if(!e.button && !e.ctrlKey) current_shape = point;
     selected_shape = point;
-  }
+  })
 }
 
 
