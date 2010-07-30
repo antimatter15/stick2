@@ -1,4 +1,27 @@
-function Figure(src){
+function svg(el, parent){
+  var attr = arguments[arguments.length-1];
+  if(!parent || !type){
+    throw "Error: Parent and type can not be null"
+  }else if(parent.appendChild){
+    el = document.createElementNS("http://www.w3.org/2000/svg", el);
+    parent.appendChild(el);
+  }
+  if(!parent.appendChild || attr != parent){
+    for(var key in attr)
+      el.setAttribute(key, attr[key]+'');
+  }
+  return el;
+}
+
+Element.prototype.remove = function(){
+  this.parentNode.removeChild(this);
+}
+
+Element.prototype.toFront = function(){
+  this.parentNode.appendChild(this)
+}
+
+function Figure(src, draw){
   //a figure is composed of lines or circles
   //each line/circle contains 2 points, one flexible, one anchored to another point
   //they all go down to a root point, which has no parent.
@@ -6,7 +29,7 @@ function Figure(src){
     src.pos[0] + stage.x,
     src.pos[1] + stage.y
   ]
-  this.root = new Root(src.angle, pos);
+  this.root = new Root(src.angle, pos, false, draw);
   (function(parent, children){
     for(var i = 0; i < children.length; i++){
       var child = children[i]
@@ -35,38 +58,34 @@ Figure.prototype.save = function(){
   return nobj;
 }
 
+
+function createShapeHandle(shape, color){
+  (shape.end = svg('circle', shape.draw, {
+    fill: color || 'red'
+  })).mousedown = function(e){ //not very memsafe
+    if(!e.button && !e.ctrlKey) current_shape = point;
+    selected_shape = point;
+  }
+}
+
+
 function Root(angle, pos, noend, draw){
   //this is a root point.
   var point = this;
-  var draw = this.draw = draw || window.draw;
+  var draw = this.draw = draw;
   
   this.type = "root"
-  if(!noend){
-    this.shape = draw.ellipse(0,0,handle_size,handle_size)
-    .attr("fill","#FFA500")
-    .mousedown(function(e){
-      if(e.button == 0 && !e.ctrlKey)
-        current_shape = point;
-      selected_shape = point;
-    
-    })
-
-		$(this.shape.node).bind(MOUSEDOWN, function(e){
-        current_shape = point;
-      selected_shape = point;
-    
-    })
-		
-  }
-  this.pos = pos||[500,500]
+  if(!noend) createShapeHandle(this, "#FFA500");
+  this._pos = pos||[500,500]
   this.render()
   this._angle = angle||0;
   this.children = [];
   
 }
 
+var rootproto = Root.prototype;
 
-Root.prototype.all = function(){
+rootproto.all = function(){
   var all = [];
   (function(children){
     for(var i = 0; i < children.length; i++){
@@ -76,79 +95,76 @@ Root.prototype.all = function(){
   })(this.children);
   return all
 }
-Root.prototype.save = function(){
+rootproto.save = function(){
   for(var i = 0, children = []; i < this.children.length; i++){
     children.push(this.children[i].save())
   }
   return {
     type: this.type,
-    pos: this.pos,
+    pos: this._pos,
     angle: Math.floor(this._angle * (180/Math.PI)),
     children: children
   }
 }
 
-Root.prototype.render = function(){
-  if(this.shape){
-    this.shape.toFront();
-    this.shape.attr("cx",this.pos[0]).attr("cy",this.pos[1])
-  }
+rootproto.render = function(){
+  if(this.end) svg(this.end, {cx: this._pos[0], cy: this._pos[1]}).toFront();
 }
-Root.prototype.move = Root.prototype.rotate = function(x,y){
-  this.pos = [x,y]
+rootproto.move = rootproto.rotate = function(x,y){
+  this._pos = [x,y]
 }
-Root.prototype.getPos = function(){
-  return this.pos;
+rootproto.pos = function(){
+  return this._pos;
 }
-Root.prototype.angle = function(){
+rootproto.angle = function(){
   return this._angle;
 }
-Root.prototype.renderAll = function(){
+rootproto.renderAll = function(){
   this.render()
-  for(var i = 0; i < this.children.length; i++){
-    this.children[i].renderAll()
-  }
+  for(var l = this.children.length;l--;)
+    this.children[l].renderAll();
 }
-Root.prototype.remove = function(){
+rootproto.remove = function(){
   this.deleted = true;
   
-  while(this.children.length > 0){
+  while(this.children.length > 0)
     this.children[0].remove();
-  }
   
-  if(this.shape)
-    this.shape.remove();
+  if(this.end)
+    this.end.remove();
 }
 
 function Shape(){} //empty object which is extended upon
 
-Shape.prototype.angle = function(){
+var shapeproto = Shape.prototype;
+
+shapeproto.angle = function(){
   return this.anchor.angle() + this._angle
 }
-Shape.prototype.rotate = function(x, y){
-  var pos = this.anchor.getPos()
+shapeproto.rotate = function(x, y){
+  var pos = this.anchor.pos()
   var angle = Math.atan2(y - pos[1], x - pos[0]) - this.anchor.angle()
   this._angle = angle;
 }
-Shape.prototype.move = function(x, y){
-  var pos = this.anchor.getPos()
+shapeproto.move = function(x, y){
+  var pos = this.anchor.pos()
   this.rotate(x, y);
   this.length = Math.sqrt(Math.pow(x-pos[0],2)+Math.pow(y-pos[1],2))
 }
-Shape.prototype.getPos = function(){
+shapeproto.pos = function(){
   //time for some trigonometry!
-  var anchor = this.anchor.getPos()
+  var anchor = this.anchor.pos()
   var dy = Math.sin(this.angle()) * this.length;
   var dx = Math.cos(this.angle()) * this.length;
   return [anchor[0] + dx, anchor[1] + dy];
 }
-Shape.prototype.renderAll = function(){
+shapeproto.renderAll = function(){
   this.render();
   for(var i = 0; i < this.children.length; i++){
     this.children[i].renderAll()
   }
 }
-Shape.prototype.remove = function(){
+shapeproto.remove = function(){
   this.deleted = true;
 
   while(this.children.length > 0){
@@ -167,7 +183,10 @@ Shape.prototype.remove = function(){
   //*/
   
 }
-Shape.prototype.save = function(){
+
+
+
+shapeproto.save = function(){
   for(var i = 0, children = []; i < this.children.length; i++){
     children.push(this.children[i].save())
   }
@@ -181,6 +200,7 @@ Shape.prototype.save = function(){
   }
 }
 
+
 function Line(anchor, angle, length, width, color, noend){
   //a shape is a rendering of 2 arbitrary points
   var line = this;
@@ -191,43 +211,30 @@ function Line(anchor, angle, length, width, color, noend){
   this.children = [];
   this.length = length||50;
   this._angle = angle/(180/Math.PI);
-  this.shape = draw.path("")
+  this.shape = svg('line', draw);//draw.path("")
   this.width = width||6;
   this.color = color||"#000";
-  if(!noend){
-    this.end = draw.ellipse(0,0,handle_size,handle_size)
-    .attr("fill","red")
-    .mousedown(function(e){
-      if(e.button == 0 && !e.ctrlKey)
-        current_shape = line;
-      selected_shape = line;
-      e.preventDefault()
-      e.stopPropagation()
-    })
-
-					$(this.end.node).bind(MOUSEDOWN, function(e){
-	            current_shape = line;
-	          selected_shape = line;
-	          e.preventDefault()
-	          e.stopPropagation()
-	        })
-  }
+  if(!noend) createShapeHandle(this);
   this.anchor.children.push(this);
   
   this.render();
   
 }
-Line.prototype = new Shape();
+var lineproto = Line.prototype = new Shape();
 
-Line.prototype.render = function(){
-  var anchor = this.anchor.getPos()
-  var end = this.getPos()
-  this.shape
-    .attr("path","M"+anchor[0]+","+anchor[1]+" L"+end[0]+","+end[1])
-    .attr('stroke-width',this.width+"px")
-    .attr('stroke', this.color)
-    .attr('stroke-linecap', 'round');
-  if(this.end)this.end.attr("cx",end[0]).attr("cy",end[1]).toFront();
+lineproto.render = function(){
+  var anchor = this.anchor.pos()
+  var end = this.pos()
+  svg(this.shape, {
+    x1: anchor[0], 
+    y1: anchor[1], 
+    x2: end[0], 
+    y2: end[1], 
+    'stroke-width': this.width+'px', 
+    stroke: this.color, 
+    'stroke-linecap': 'round'
+  });
+  if(this.end) svg(this.end, {cx: end[0], cy: end[1]}).toFront();
 }
 
 
@@ -242,43 +249,22 @@ function Circle(anchor, angle, length, width, color, noend){
   this.length = length||50;
   var draw = this.draw = anchor.draw;
   this._angle = angle/(180/Math.PI);
-  this.shape = draw.ellipse(0,0,0,0)
+  this.shape = svg('circle', draw);
   this.width = width||6;
   this.color = color||"#000";
-  if(!noend){
-    this.end = draw.ellipse(0,0,handle_size,handle_size)
-    .attr("fill","red")
-    .mousedown(function(e){
-      if(e.button == 0 && !e.ctrlKey)
-        current_shape = circle;
-      selected_shape = circle;
-    })
+  if(!noend) createShapeHandle(this);
 
-		$(this.end.node).bind(MOUSEDOWN, function(){
-			current_shape = circle;
-			selected_shape = circle;
-		})
-  }
-
-	
   this.anchor.children.push(this);
   
   this.render();
   
 }
-Circle.prototype = new Shape();
+var circleproto = Circle.prototype = new Shape();
 
-Circle.prototype.render = function(){
-  var anchor = this.anchor.getPos()
-  var end = this.getPos()
-  this.shape
-  .attr("rx", this.length/2)
-  .attr("ry",this.length/2)
-  .attr("cx",(anchor[0]+end[0])/2)
-  .attr("cy",(anchor[1]+end[1])/2)
-  .attr('stroke-width',this.width + "px")
-  .attr('stroke', this.color)
-  //this.end.translate(end[0], end[1], true);
-  if(this.end)this.end.attr("cx",end[0]).attr("cy",end[1]).toFront();
+circleproto.render = function(){
+  var anchor = this.anchor.pos()
+  var end = this.pos();
+  svg(this.shape, {r: this.length/2, cx: (anchor[0]+end[0])/2, cy: (anchor[1]+end[1])/2, 'stroke-width': this.width+'px', stroke: this.color});
+  if(this.end) svg(this.end, {cx: end[0], cy: end[1]}).toFront();
 }
 

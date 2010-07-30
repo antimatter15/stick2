@@ -13,7 +13,13 @@ function svg(el, parent){
   return el;
 }
 
+Element.prototype.remove = function(){
+  this.parentNode.removeChild(this);
+}
 
+Element.prototype.toFront = function(){
+  this.parentNode.appendChild(this)
+}
 
 
 
