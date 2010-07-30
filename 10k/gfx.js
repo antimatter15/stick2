@@ -22,4 +22,4 @@ var draw = svg('svg', document.getElementById(''), {
   height: 100
 })
 
-var circle = svg('circle', draw)
+var circle = svg('circle', draw);
