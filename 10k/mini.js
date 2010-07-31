@@ -630,7 +630,8 @@ function load_animation(src){
 
 function exit_playback(){
   playback = false
-  show('figcont next')
+  show('figcont')
+  $('next').style.display = 'table-cell';
   for(var i = 0; i < playback_items.length; i++){
     playback_items[i].root.remove();
   }
@@ -747,6 +748,9 @@ function update_selected(){
 })
 
 
+'share'.on('click', function(){
+  alert('sharing is caring')
+})
 
 'angle'.pc(function(){
   var ang = prompt('Enter new angle',selected_shape.R*deg2rad)
