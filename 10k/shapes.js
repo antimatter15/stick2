@@ -30,16 +30,12 @@ function ScaledFigure(draw, src, scale){
   var scale = scale||1.0;
   var allset = svg('g',this.root.draw)
   this.allset = allset;
-  this.root._pos = [this.root._pos[0] * scale, this.root._pos[1] * scale];
+  this.root.P = [this.root.P[0] * scale, this.root.P[1] * scale];
   //this.root.shape.scale(0.1,0.1,0,0)
   (function(parent, children){
     for(var i = 0; i < children.length; i++){
       var child = children[i]
-      if(child.type == "line"){
-        var el = new Line(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
-      }else if(child.type == "circle"){
-        var el = new Circle(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
-      }
+      var el = new(child.type == 'line'?Line:Circle)(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
       allset.appendChild(el.shape)
       arguments.callee(el, child.children); //recurse
     }
@@ -61,11 +57,7 @@ function Figure(src, draw){
   (function(parent, children){
     for(var i = 0; i < children.length; i++){
       var child = children[i]
-      if(child.type == "line"){
-        var el = new Line(parent, child.angle, child.length, child.width, child.color)
-      }else if(child.type == "circle"){
-        var el = new Circle(parent, child.angle, child.length, child.width, child.color)
-      }
+      var el = new(child.type == 'line'?Line:Circle)(parent, child.angle, child.length , child.width, child.color)
       arguments.callee(el, child.children); //recurse
     }
   })(this.root, src.children);
@@ -103,11 +95,11 @@ function Root(angle, pos, noend, draw){
   var point = this;
   var draw = this.draw = draw;
   
-  this.type = "root"
+  this.T = "root"
   if(!noend) createShapeHandle(this, "#FFA500");
-  this._pos = pos||[500,500]
+  this.P = pos||[500,500]
   this.render()
-  this._angle = angle||0;
+  this.R = angle||0;
   this.children = [];
   
 }
@@ -129,24 +121,24 @@ rootproto.save = function(){
     children.push(this.children[i].save())
   }
   return {
-    type: this.type,
-    pos: this._pos,
-    angle: Math.floor(this._angle * (180/Math.PI)),
+    type: this.T,
+    pos: this.P,
+    angle: Math.floor(this.R * (180/Math.PI)),
     children: children
   }
 }
 
 rootproto.render = function(){
-  if(this.end) svg(this.end, {cx: this._pos[0], cy: this._pos[1]}).toFront();
+  if(this.end) svg(this.end, {cx: this.P[0], cy: this.P[1]}).toFront();
 }
 rootproto.move = rootproto.rotate = function(x,y){
-  this._pos = [x,y]
+  this.P = [x,y]
 }
 rootproto.pos = function(){
-  return this._pos;
+  return this.P;
 }
 rootproto.angle = function(){
-  return this._angle;
+  return this.R;
 }
 rootproto.renderAll = function(){
   this.render()
@@ -168,21 +160,21 @@ function Shape(){} //empty object which is extended upon
 var shapeproto = Shape.prototype;
 
 shapeproto.angle = function(){
-  return this.anchor.angle() + this._angle
+  return this.A.angle() + this.R
 }
 shapeproto.rotate = function(x, y){
-  var pos = this.anchor.pos()
-  var angle = Math.atan2(y - pos[1], x - pos[0]) - this.anchor.angle()
-  this._angle = angle;
+  var pos = this.A.pos()
+  var angle = Math.atan2(y - pos[1], x - pos[0]) - this.A.angle()
+  this.R = angle;
 }
 shapeproto.move = function(x, y){
-  var pos = this.anchor.pos()
+  var pos = this.A.pos()
   this.rotate(x, y);
   this.length = Math.sqrt(Math.pow(x-pos[0],2)+Math.pow(y-pos[1],2))
 }
 shapeproto.pos = function(){
   //time for some trigonometry!
-  var anchor = this.anchor.pos()
+  var anchor = this.A.pos()
   var dy = Math.sin(this.angle()) * this.length;
   var dx = Math.cos(this.angle()) * this.length;
   return [anchor[0] + dx, anchor[1] + dy];
@@ -204,9 +196,9 @@ shapeproto.remove = function(){
   if(this.end) this.end.remove();
   
   //*
-  for(var i = 0; i < this.anchor.children.length; i++){
-    if(this.anchor.children[i] == this){
-      this.anchor.children.splice(i,1);
+  for(var i = 0; i < this.A.children.length; i++){
+    if(this.A.children[i] == this){
+      this.A.children.splice(i,1);
     }
   }
   //*/
@@ -220,11 +212,11 @@ shapeproto.save = function(){
     children.push(this.children[i].save())
   }
   return {
-    type: this.type,
+    type: this.T,
     length: Math.floor(this.length),
     width: this.width,
     color: this.color,
-    angle: Math.floor(this._angle * (180/Math.PI)),
+    angle: Math.floor(this.R * (180/Math.PI)),
     children: children
   }
 }
@@ -233,18 +225,18 @@ shapeproto.save = function(){
 function Line(anchor, angle, length, width, color, noend){
   //a shape is a rendering of 2 arbitrary points
   var line = this;
-  this.type = "line"
-  this.anchor = anchor; //type = shape.
+  this.T = "line"
+  this.A = anchor; //type = shape.
   var draw = this.draw = anchor.draw;
   
   this.children = [];
   this.length = length||50;
-  this._angle = angle/(180/Math.PI);
+  this.R = angle/(180/Math.PI);
   this.shape = svg('line', draw);//draw.path("")
   this.width = width||6;
   this.color = color||"#000";
   if(!noend) createShapeHandle(this);
-  this.anchor.children.push(this);
+  this.A.children.push(this);
   
   this.render();
   
@@ -252,7 +244,7 @@ function Line(anchor, angle, length, width, color, noend){
 var lineproto = Line.prototype = new Shape();
 
 lineproto.render = function(){
-  var anchor = this.anchor.pos()
+  var anchor = this.A.pos()
   var end = this.pos()
   svg(this.shape, {
     x1: anchor[0], 
@@ -272,18 +264,18 @@ lineproto.render = function(){
 function Circle(anchor, angle, length, width, color, noend){
   //a shape is a rendering of 2 arbitrary points
   var circle = this;
-  this.anchor = anchor; //type = shape.
+  this.A = anchor; //type = shape.
   this.children = [];
-  this.type = "circle"
+  this.T = "circle"
   this.length = length||50;
   var draw = this.draw = anchor.draw;
-  this._angle = angle/(180/Math.PI);
+  this.R = angle/(180/Math.PI);
   this.shape = svg('circle', draw);
   this.width = width||6;
   this.color = color||"#000";
   if(!noend) createShapeHandle(this);
 
-  this.anchor.children.push(this);
+  this.A.children.push(this);
   
   this.render();
   
@@ -291,7 +283,7 @@ function Circle(anchor, angle, length, width, color, noend){
 var circleproto = Circle.prototype = new Shape();
 
 circleproto.render = function(){
-  var anchor = this.anchor.pos()
+  var anchor = this.A.pos()
   var end = this.pos();
   svg(this.shape, {r: this.length/2, cx: (anchor[0]+end[0])/2, cy: (anchor[1]+end[1])/2, 'stroke-width': this.width+'px', stroke: this.color, fill: 'none'});
   if(this.end) svg(this.end, {cx: end[0], cy: end[1]}).toFront();

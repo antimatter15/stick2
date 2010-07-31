@@ -3,149 +3,46 @@
 <head>
   <title>Stick2 &alpha;</title>
 
-
+  <link rel="stylesheet" href="stick2.css">
 </head>
-<body style="margin: 0; border: 0; padding: 0;overflow:hidden">
-  <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
+<body>
+  <div id="canvas"></div>
 
-
-  <style>
-    body {
-      -webkit-user-select: none;
-        font-family: arial, sans-serif;
-        font-size: 13px;
-        background-color: #DFE8F6;
-    }
-		
-    #timeline td {
-      background-color: lightblue;
-      padding: 10px;
-      border-radius: 10px;
-			-webkit-border-radius: 10px;
-    }
-    
-    td#next {
-      background-color: lightgreen;
-    }
-/*
-    #timeline td:hover {
-      background-color: #007fff;
-      padding: 10px;
-      color: white;
-      border-radius: 10px;
-			-webkit-border-radius: 10px;
-    }
-  */  
-    #timeline div.frame{
-      width: 120px;
-      height: 100px;
-      background-color: white;
-    }
-    
-    #figures div.figcont{
-      background-color: lightblue;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 10px;
-			-webkit-border-radius: 10px;
-      height: 70px;
-      overflow:hidden;
-    }
-
-/*
-    #figures div.figcont:hover{
-      background-color: #007fff;
-      color: white;
-    }
-  */
-
-		.header {
-			position: absolute;
-			background-color: #9FCEFC;
-			width: 100%;
-			padding-top: 5px;
-			height: 35px;
-			opacity: 0.75;
-			z-index: 2;
-		}
-
-		.infobox {
-		}
-		.subinfo {
-			width: 400px;
-			height: 35px;
-			opacity: 0.75;
-			z-index: 2;
-			position: absolute;
-		}
-
-
-		td.selected {
-      background-color: #007fff !important;
-		}
-
-		#colorpicker {
-
-      z-index: 99999;
-      background-color: #DFE8F6;
-      width: 100%;
-      height: 100%;
-		}
-
-		#about {
-      z-index: 999999;
-      background-color: #DFE8F6;
-      width: 100%;
-      height: 100%;
-      top: 0px; left: 0px; position: absolute;
-      padding: 30px;
-		}
-		
-		#unlocked {
-		  display: none;
-		}
-</style>
-
-  <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:auto;background-color: #DFE8F6;" id="figcont">
+  <div id="figcont">
     <div style="overflow:hidden" id="figures"></div>
   </div>
   
   <div class="header">	
-		<div id="playpause" style="float: left;padding-left:10px;padding-right: 5px">
+		<div id="playpause" style="float: left;padding-left:10px;margin-top: -3px;padding-right: 5px;font-size: x-large">
 		&#9654;
 		</div>
 	<button style="float:left;padding-right: 5px" onclick="upload_animation()">Share</button>
   
-	<div style="padding-left: 70px; padding-right: 30px; display:none;float: left" id="infobox"> 
-	  <div style="background-color: #7ca0a5; -webkit-border-radius: 5px;height: 32px;">
+	<div id="infobox"> 
       Attach 
       <button id="line">Line</button>
       <button id="circle">Circle</button>
-
-    </div>
   </div>
-	<div id="info" style="float: left;display:none">
-    <div style="float:left;margin-top: 7px;font-size: large">
+	<div id="info" style="float:left;display:none;margin-top: 2px;font-size: large">
+		
      <span id="type"></span>
      <span><b>Angle:</b> <span id="angle"></span>&deg;</span>
      <span><b>Length:</b> <span id="length"></span>px</span>
      <span><b>Width:</b> <span id="width"></span>px</span>
      <b id="color">Color</b>
-    </div>
 	</div>
   <button class="makefig" id="rootinfo" style="float:left;display:none">Add to Library</button>
-  <div style="float: right">
-    <button class="delete" id='delete'>Delete</button> 
+  <div style="float: right;">
+    <button id='delete'>Delete</button> 
 		<button id="lockswitch">Unlock</button>		
 		<a href="http://antimatter15.com">antimatter15.com</a>
 	</div>
 </div>
 
-<div style="height: 147px;overflow-x:scroll;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
-  <div style="height: 129px;position: absolute;overflow:visible; width: 100%;border: 0; margin: 0; padding: 0;" id="timescroll">
-    <table style="border: 0; margin: 0; padding: 0">
-      <tbody style="border: 0; margin: 0; padding: 0;">
-      <tr style="border: 0; margin: 0; padding: 0" id="timeline">
+<div id="timecont">
+  <div id="timescroll">
+    <table>
+      <tr id="timeline">
         <td id="next">
         <div style="width: 120px;">
         <span style="font-size: 90px;color: #507D2A;float:left">+</span>
@@ -154,13 +51,11 @@
         </div>
         </td>
       </tr>
-      </tbody>
     </table>
   </div>
 </div>
 
 
-  <script type="text/javascript" src="shapes.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
 </body>
