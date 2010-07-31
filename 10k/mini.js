@@ -227,6 +227,83 @@ shapeproto.save = function(){
   }
 }
 
+function deflate_shape(shape){
+	var map = {
+		"root":"r",
+		"line":"l",
+		"circle": "c"
+	};
+	var newshape = shape.T == "root"?[map[shape.type], shape.pos[0], shape.pos[1], shape.angle]:[map[shape.type], shape.length, shape.width, shape.color, shape.angle];
+	for(var i = shape.children.length, newchildren = []; i--;)
+		newchildren.push(deflate_shape(shape.children[i]));
+	newshape.push(newchildren)
+	return newshape;
+}
+
+
+function compressed_save(){
+	var future = [];
+	for(var i = 0; i < frame_el.length; i++){
+		var f = framestore[i];
+		future[i] = [];
+		for(var s = 0; s < f.length; s++){
+			future[i].push(deflate_shape(f[s]))
+		}
+	}
+	return {
+		generator: "Stick2 10k",
+		fps: fps,
+		stage: stage,
+		data: future
+	}
+}
+
+function expand_save(obj){
+  if(typeof obj == 'string') obj = JSON.parse(obj);
+	var fs = {};
+	stage = obj.stage;
+	for(var i = 0; i < obj.data.length; i++){
+		fs[i] = []
+		for(var s = 0; s < obj.data[i].length; s++)
+			fs[i].push(inflate_shape(obj.data[i][s]));
+	}
+	framestore = fs;
+	frame_el.map(function(e){e.parentNode.remove()})
+	frame_el = [];
+	var c=0,i;for(i in src) c++; //freaking count the keys!
+	for(;c--;){
+		addFrame(true);
+		update_thumb(frame_el.length-1);
+	}
+	selectFrame(0, true)
+}
+
+function inflate_shape(obj){
+	var map = {
+		"r": "root",
+		"l": "line",
+		"c": "circle"
+	};
+	var shape = {};
+	shape.type = map[obj[0]];
+	if(obj[0] == "r"){
+		shape.pos = [obj[1],obj[2]]
+		shape.angle = obj[3]
+		shape.children = obj[4]
+	}else{
+		shape.length = obj[1]
+		shape.width = obj[2]
+		shape.color = obj[3]
+		shape.angle = obj[4]
+		shape.children = obj[5]
+  }
+	for(var i = shape.children.length; i--;)
+		shape.children[i] = inflate_shape(shape.children[i]);
+	return shape;
+}
+
+
+
 
 function Line(anchor, angle, length, width, color, noend){
   //a shape is a rendering of 2 arbitrary points
@@ -501,8 +578,10 @@ function save_frame(){
 }
 function selectFrame(num, nosave){
   selected_shape = null;
+  
   $('frame'+current_frame).className = '';
   $('frame'+num).className = 'selected'
+  
   if(playback) return current_frame = num;
   
   if(!nosave)save_frame();
@@ -595,20 +674,18 @@ function play_frame(frame){
   }
 }
 function togglePlayback(){
-  if(playback){
-    playback = false;
-  }else{
-    playback = true;
+  if(playback = !playback){
     initiate_playback();
     autoplay();
   }
 }
 function autoplay(){
+  var num = current_frame;
   if(playback){
-    if(++current_frame >= frame_el.length){
-      current_frame = 0;
+    if(++num >= frame_el.length){
+      num = 0;
     }
-    play_frame(current_frame);
+    play_frame(num);
    
     setTimeout(arguments.callee, 1000/fps);
   }else{
@@ -616,17 +693,6 @@ function autoplay(){
   }
 }
 
-function load_animation(src){
-	framestore = src;
-	frame_el.map(function(e){e.parentNode.remove()})
-	frame_el = [];
-	var c=0,i;for(i in src) c++; //freaking count the keys!
-	for(;c--;){
-		addFrame(true);
-		update_thumb(frame_el.length-1);
-	}
-	selectFrame(0, true)
-}
 
 function exit_playback(){
   playback = false
@@ -665,7 +731,13 @@ function exit_playback(){
   addFigure('Stickman',{type:'root','pos':[200,200],angle:0,children:[{type:'line',length:50,'width':6,color:'#000',angle:110,children:[{type:'line',length:50,'width':6,color:'#000',angle:0,children:[]}]},{type:'line',length:50,'width':6,color:'#000',angle:70,children:[{type:'line',length:50,'width':6,color:'#000',angle:0,children:[]}]},{type:'line',length:60,'width':6,color:'#000',angle:-90,children:[{type:'circle',length:35,'width':6,color:'#000',angle:0,children:[]},{type:'line',length:40,'width':6,color:'#000',angle:140,children:[{type:'line',length:40,'width':6,color:'#000',angle:10,children:[]}]},{type:'line',length:40,'width':6,color:'#000',angle:-140,children:[{type:'line',length:40,'width':6,color:'#000',angle:-10,children:[]}]}]}]})
   
 
-if(localStorage && localStorage.figures){
+try{
+  localStorage.test = 'works';
+}catch(err){
+  window.localStorage = {};
+}
+
+if(localStorage.figures){
   var lsf = JSON.parse(localStorage.figures)
   for(var i = 0; i < lsf.length; i++){
     var fig = lsf[i];
@@ -741,7 +813,7 @@ function update_selected(){
   update_selected();
 })
 'delete'.on('click',function(){
-  if(confirm('Are you sure you want to delete this '+(selected_shape.type=='root'?'figure':selected_shape.type)+'?')){
+  if(confirm('Are you sure you want to delete this '+(selected_shape.T=='root'?'figure':selected_shape.T)+'?')){
     selected_shape.remove();
     selected_shape = null;
   }
@@ -749,7 +821,8 @@ function update_selected(){
 
 
 'share'.on('click', function(){
-  alert('sharing is caring')
+  window.SAVED = compressed_save()
+//  alert('sharing is caring')
 })
 
 'angle'.pc(function(){
