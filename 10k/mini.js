@@ -1,5 +1,5 @@
 document.write('<div id=canvas></div><div id=figcont><div style=overflow:hidden id=figures></div></div><div class=header><div id=playpause style="float: left;padding: 0 10px 0 10px;margin-top: -3px;;font-size: x-large">&#9654;</div><button id=share style=float:left>Share</button><div id=infobox>Attach<button id=line>Line</button><button id=circle>Circle</button></div><div id=info style="float:left;margin-top: 2px;font-size: large"><span id=type></span><span><b> Angle: </b><span id=angle></span>&deg;</span><span><b> Length: </b><span id=length></span></span><span><b> Width: </b><span id=width></span></span><span><b> Color: </b><span id=color></span></span></div><button id=makefig style=float:left>Add to Library</button><div style="float: right"><button id=delete>Delete</button><button id=lockswitch>Unlock</button><a href="http://antimatter15.com">antimatter15.com</a></div></div><div id=timecont><div id=timescroll><table><tr id=timeline><td id=next><div style="width: 120px"><span style="font-size: 90px;color: #507D2A;float:left">+</span><br><br><span>Add new frame</span></div></td></table></div></div>');
-(function(){
+//(function(){
 var deg2rad = (180/Math.PI);
 
 
@@ -227,31 +227,44 @@ shapeproto.save = function(){
   }
 }
 
-function deflate_shape(shape){
-	var map = {
-		"root":"r",
-		"line":"l",
-		"circle": "c"
-	};
-	var newshape = shape.T == "root"?[map[shape.type], shape.pos[0], shape.pos[1], shape.angle]:[map[shape.type], shape.length, shape.width, shape.color, shape.angle];
-	for(var i = shape.children.length, newchildren = []; i--;)
-		newchildren.push(deflate_shape(shape.children[i]));
-	newshape.push(newchildren)
-	return newshape;
+
+function deflate2(root){
+  /*
+    [x, y, ang, children...]
+    [type, length, width, color, angle]
+    type: 0 circle
+          1 line
+  */
+  function deflate2_child(child){
+    return [+(child.type=='line'), child.length, child.color, child.angle].concat(child.children.map(deflate2_child));
+  }
+  return root.pos.concat([root.angle],root.children.map(deflate2_child))
 }
 
 
+function inflate2(root){
+  function inflate2_child(child){
+    return {
+      type: child[0]?'line':'circle',
+      length: child[1],
+      color: child[2],
+      angle: child[3],
+      children: child.slice(4).map(inflate2_child)
+    }
+  }
+  return {
+    type: 'root',
+    pos: root.slice(0,2),
+    angle: root[2],
+    children: root.slice(3).map(inflate2_child)
+  }
+}
+
 function compressed_save(){
-	var future = [];
-	for(var i = 0; i < frame_el.length; i++){
-		var f = framestore[i];
-		future[i] = [];
-		for(var s = 0; s < f.length; s++){
-			future[i].push(deflate_shape(f[s]))
-		}
-	}
+	for(var future = [], i = frame_el.length; i--;)
+		future[i] = framestore[i].map(deflate2);
 	return {
-		generator: "Stick2 10k",
+		generator: "Stick2 10k v2",
 		fps: fps,
 		stage: stage,
 		data: future
@@ -262,15 +275,12 @@ function expand_save(obj){
   if(typeof obj == 'string') obj = JSON.parse(obj);
 	var fs = {};
 	stage = obj.stage;
-	for(var i = 0; i < obj.data.length; i++){
-		fs[i] = []
-		for(var s = 0; s < obj.data[i].length; s++)
-			fs[i].push(inflate_shape(obj.data[i][s]));
-	}
+	for(var i = obj.data.length; i--;)
+	  fs[i] = obj.data[i].map(inflate2);
 	framestore = fs;
 	frame_el.map(function(e){e.parentNode.remove()})
 	frame_el = [];
-	var c=0,i;for(i in src) c++; //freaking count the keys!
+	var c=0,i;for(i in fs) c++; //freaking count the keys!
 	for(;c--;){
 		addFrame(true);
 		update_thumb(frame_el.length-1);
@@ -278,29 +288,6 @@ function expand_save(obj){
 	selectFrame(0, true)
 }
 
-function inflate_shape(obj){
-	var map = {
-		"r": "root",
-		"l": "line",
-		"c": "circle"
-	};
-	var shape = {};
-	shape.type = map[obj[0]];
-	if(obj[0] == "r"){
-		shape.pos = [obj[1],obj[2]]
-		shape.angle = obj[3]
-		shape.children = obj[4]
-	}else{
-		shape.length = obj[1]
-		shape.width = obj[2]
-		shape.color = obj[3]
-		shape.angle = obj[4]
-		shape.children = obj[5]
-  }
-	for(var i = shape.children.length; i--;)
-		shape.children[i] = inflate_shape(shape.children[i]);
-	return shape;
-}
 
 
 
@@ -821,7 +808,9 @@ function update_selected(){
 
 
 'share'.on('click', function(){
-  window.SAVED = compressed_save()
+ expand_save(localStorage.SAVED)
+  //window.SAVED = compressed_save()
+  //localStorage.SAVED = JSON.stringify(compressed_save());
 //  alert('sharing is caring')
 })
 
@@ -844,4 +833,4 @@ function update_selected(){
 })
 
 
-})()
+//})()
