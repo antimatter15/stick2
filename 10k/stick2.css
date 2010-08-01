@@ -1,110 +1,110 @@
-/* Approximate output size: 1134/1319 (0.8597422289613343%) */
-
-body{
+#FC,#TC,body{
   -webkit-user-select:none;
+  -moz-user-select:none;
   font-family:arial, sans-serif;
-  font-size:13px
+  font-size:13px;
+  background:#dfe8f6
 }
 
-#figcont,#timecont,body{
-  background-color:#DFE8F6
-}
-
-#canvas,#figcont,#timecont,#timescroll,body{
-  margin:0;
+#FC,#TC,#TS,#N,body{
   border:0;
+  margin:0;
   padding:0
 }
 
-#figures div.figcont,body{
+#TC,#TS,#N,.header{
+  width:100%
+}
+
+#FC,#N{
+  left:0;
+  top:0;
+  height:100%
+}
+
+.FC,body{
   overflow:hidden
 }
 
-#timescroll{
+#TS{
   height:129px;
   overflow:visible
 }
 
-#canvas,#figcont,#timecont,#timescroll,.header,.subinfo{
+#FC,#TC,#TS,#N,.SI,.header{
   position:absolute
 }
 
-#canvas,#timecont,#timescroll,.header{
-  width:100%
-}
-
-#canvas,#canvas{
-  top:0
-}
-
-#canvas,#canvas,#figcont{
-  left:0
-}
-
-#canvas,#figcont{
-  height:100%
-}
-
-#figcont{
+#FC{
   width:130px;
   margin-top:40px;
   overflow:auto
 }
 
-#timecont{
+#TC{
   height:147px;
   overflow-x:scroll;
   bottom:0
 }
 
-#figures div.figcont,#timeline td{
-  background-color:lightblue;
-  padding:10px;
+#IB,.FC,#playpause,td{
+  background: lightblue;
   border-radius:10px;
-  -webkit-border-radius:10px
+  -webkit-border-radius:10px;
+  -moz-border-radius:10px;
+  padding:10px
 }
 
-td#next{
-  background-color:lightgreen
+#next{
+  background:#90EE90
 }
 
-#timeline div.frame{
+#timeline .frame{
+  background:#FFF;
   width:120px;
-  height:100px;
-  background-color:white
+  height:100px
 }
 
-#infobox{
-  padding:0 10px 0 10px;
-  display:none;
-  float:left;
-  background-color:#7ca0a5;
-  -webkit-border-radius:5px
+.FC {
+  height: 70px;
+  margin: 10px;
 }
 
-#figures div.figcont{
-  margin:10px;
-  height:70px
+#IB{
+  background:#7ca0a5
+}
+
+#IB,#info,#playpause,#makefig{
+  float:left
+}
+
+#IB,#playpause{
+  padding:0 10px
+}
+
+#playpause{
+  margin-top:-3px;
+  font-size:x-large
 }
 
 .header{
-  background-color:#9FCEFC;
+  background:#9fcefc;
   padding-top:5px;
   height:29px
 }
 
-.header,.subinfo{
-  opacity:0.75;
-  z-index:2
-}
-
-.subinfo{
+.SI{
   width:400px;
   height:35px
 }
 
+#info{
+  margin-top:2px;
+  font-size:large
+}
+
 td.selected{
-  background-color:#007fff !important
+  background:#007fff !important
 }
 
 

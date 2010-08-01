@@ -1,8 +1,8 @@
-document.write('<div id=canvas></div><div id=figcont><div style=overflow:hidden id=figures></div></div><div class=header><div id=playpause style="float: left;padding: 0 10px 0 10px;margin-top: -3px;;font-size: x-large">&#9654;</div><button id=share style=float:left>Share</button><div id=infobox>Attach<button id=line>Line</button><button id=circle>Circle</button></div><div id=info style="float:left;margin-top: 2px;font-size: large"><span id=type></span><span><b> Angle: </b><span id=angle></span>&deg;</span><span><b> Length: </b><span id=length></span></span><span><b> Width: </b><span id=width></span></span><span><b> Color: </b><span id=color></span></span></div><button id=makefig style=float:left>Add to Library</button><div style="float: right"><button id=delete>Delete</button><button id=lockswitch>Unlock</button><a href="http://antimatter15.com">antimatter15.com</a></div></div><div id=timecont><div id=timescroll><table><tr id=timeline><td id=next><div style="width: 120px"><span style="font-size: 90px;color: #507D2A;float:left">+</span><br><br><span>Add new frame</span></div></td></table></div></div>');
+document.write('<style>body,#TC,#FC{font:13px arial,sans-serif;-webkit-user-select:none;-moz-user-select:none;background:#dfe8f6}body,#N,#TS,#TC,#FC{border:0;margin:0;padding:0}.header,#N,#TS,#TC{width:100%}#N,#FC{left:0;top:0;height:100%}body,.FC{overflow:hidden}#TS{height:129px;overflow:visible}.header,.SI,#N,#TS,#TC,#FC{position:absolute}#FC{width:130px;margin-top:40px;overflow:auto}#TC{height:147px;overflow-x:scroll;bottom:0}td,#playpause,.FC,#IB{background:lightblue;border-radius:10px;-webkit-border-radius:10px;-moz-border-radius:10px;padding:10px}#next{background:#90ee90}#timeline .frame{background:#FFF;width:120px;height:100px}.FC{height:70px;margin:10px}#IB{background:#7ca0a5}#makefig,#playpause,#info,#IB{float:left}#playpause,#IB{padding:0 10px}#playpause{margin-top:-3px;font-size:x-large}.header{background:#9fcefc;padding-top:5px;height:29px}.SI{width:400px;height:35px}#info{margin-top:2px;font-size:large}td.selected{background:#007fff !important}</style><div id=N></div><div id=FC><div id=figures></div></div><div class=header><div id=playpause>&#9654;</div><button id=share style=float:left>Share/Save</button><div id=IB>Attach<button id=line>Line</button><button id=circle>Circle</button></div><div id=info><span id=type></span><span><b>Angle:</b><span id=angle></span>&deg;</span><span><b>Length:</b><span id=length></span></span><span><b>Width:</b><span id=width></span></span><span><b>Color:</b><span id=color></span></span></div><button id=makefig>Add to Library</button><div style=float:right><button id=delete>Delete</button><button id=lockswitch>Unlock Length</button><a href="http://antimatter15.com">antimatter15.com</a></div></div><div id=TC><div id=TS><table><tr id=timeline><td id=next><div style="width: 120px"><span style="font-size:90px;color:#507D2A;float:left">+</span><br><br><span>Add new frame</span></div></td></table></div></div>');
 (function(){
-var deg2rad = (180/_Math.PI);
-var _document = document, _Math = Math;
-
+//var document = document//, Math = Math;
+var deg2rad = (180/Math.PI);
+var host = 'http://simple-datastore.appspot.com/'
 
 
 function svg(el, parent){
@@ -11,7 +11,7 @@ function svg(el, parent){
     console.log(parent, el);
     throw 'Error: Parent and type can not be null'
   }else if(parent.appendChild){
-    el = _document.createElementNS('http://www.w3.org/2000/svg', el);
+    el = document.createElementNS('http://www.w3.org/2000/svg', el);
     parent.appendChild(el);
   }
   if(!parent.appendChild || attr != parent){
@@ -21,7 +21,7 @@ function svg(el, parent){
   return el;
 }
 
-Element.prototype.remove = function(){
+Element.prototype.X = function(){
   this.parentNode.removeChild(this);
 }
 
@@ -42,13 +42,14 @@ function ScaledFigure(draw, src, scale){
   (function(parent, C){
     for(var i = 0; i < C.length; i++){
       var child = C[i]
+      console.log(child)
       var el = new(child.type == 'line'?Line:Circle)(parent, child.angle, child.length * scale, child.width * scale, child.color, true)
       allset.appendChild(el.shape)
       arguments.callee(el, child.C); //recurse
     }
   })(this.root, src.C);
   
-  this.root.renderAll();
+  this.root.rA();
 }
 
 
@@ -69,7 +70,7 @@ function Figure(src, draw){
     }
   })(this.root, src.C);
   
-  this.root.renderAll();
+  this.root.rA();
 }
 
 Figure.prototype.save = function(){
@@ -130,7 +131,7 @@ rootproto.save = function(){
   return {
     type: this.T,
     pos: this.P,
-    angle: _Math.floor(this.R * deg2rad),
+    angle: Math.floor(this.R * deg2rad),
     C: C
   }
 }
@@ -147,19 +148,19 @@ rootproto.pos = function(){
 rootproto.angle = function(){
   return this.R;
 }
-rootproto.renderAll = function(){
+rootproto.rA = function(){
   this.render()
   for(var l = this.C.length;l--;)
-    this.C[l].renderAll();
+    this.C[l].rA();
 }
-rootproto.remove = function(){
+rootproto.X = function(){
   this.deleted = true;
   
   while(this.C.length > 0)
-    this.C[0].remove();
+    this.C[0].X();
   
   if(this.end)
-    this.end.remove();
+    this.end.X();
 }
 
 function Shape(){} //empty object which is extended upon
@@ -171,36 +172,36 @@ shapeproto.angle = function(){
 }
 shapeproto.rotate = function(x, y){
   var pos = this.A.pos()
-  var angle = _Math.atan2(y - pos[1], x - pos[0]) - this.A.angle()
+  var angle = Math.atan2(y - pos[1], x - pos[0]) - this.A.angle()
   this.R = angle;
 }
 shapeproto.move = function(x, y){
   var pos = this.A.pos()
   this.rotate(x, y);
-  this.length = _Math.sqrt(_Math.pow(x-pos[0],2)+_Math.pow(y-pos[1],2))
+  this.length = Math.sqrt(Math.pow(x-pos[0],2)+Math.pow(y-pos[1],2))
 }
 shapeproto.pos = function(){
   //time for some trigonometry!
   var anchor = this.A.pos()
-  var dy = _Math.sin(this.angle()) * this.length;
-  var dx = _Math.cos(this.angle()) * this.length;
+  var dy = Math.sin(this.angle()) * this.length;
+  var dx = Math.cos(this.angle()) * this.length;
   return [anchor[0] + dx, anchor[1] + dy];
 }
-shapeproto.renderAll = function(){
+shapeproto.rA = function(){
   this.render();
   for(var i = 0; i < this.C.length; i++){
-    this.C[i].renderAll()
+    this.C[i].rA()
   }
 }
-shapeproto.remove = function(){
+shapeproto.X = function(){
   this.deleted = true;
 
   while(this.C.length > 0){
-    this.C[0].remove();
+    this.C[0].X();
   }
   
-  this.shape.remove();
-  if(this.end) this.end.remove();
+  this.shape.X();
+  if(this.end) this.end.X();
   
   //*
   for(var i = 0; i < this.A.C.length; i++){
@@ -220,10 +221,10 @@ shapeproto.save = function(){
   }
   return {
     type: this.T,
-    length: _Math.floor(this.length),
+    length: Math.floor(this.length),
     width: this.width,
     color: this.color,
-    angle: _Math.floor(this.R * deg2rad),
+    angle: Math.floor(this.R * deg2rad),
     C: C
   }
 }
@@ -237,7 +238,7 @@ function deflate2(root){
           1 line
   */
   function deflate2_child(child){
-    return [+(child.type=='line'), child.length, child.color, child.angle].concat(child.C.map(deflate2_child));
+    return [+(child.type=='line'), child.length, child.width, child.color, child.angle].concat(child.C.map(deflate2_child));
   }
   return root.pos.concat([root.angle],root.C.map(deflate2_child))
 }
@@ -248,9 +249,10 @@ function inflate2(root){
     return {
       type: child[0]?'line':'circle',
       length: child[1],
-      color: child[2],
-      angle: child[3],
-      C: child.slice(4).map(inflate2_child)
+      width: child[2],
+      color: child[3],
+      angle: child[4],
+      C: child.slice(5).map(inflate2_child)
     }
   }
   return {
@@ -279,7 +281,7 @@ function expand_save(obj){
 	for(var i = obj.data.length; i--;)
 	  fs[i] = obj.data[i].map(inflate2);
 	framestore = fs;
-	frame_el.map(function(e){e.parentNode.remove()})
+	frame_el.map(function(e){e.parentNode.X()})
 	frame_el = [];
 	var c=0,i;for(i in fs) c++; //freaking count the keys!
 	for(;c--;){
@@ -361,11 +363,7 @@ circleproto.render = function(){
 }
 
 
-var MOUSEUP = 'mouseup';
-var MOUSEDOWN = 'mousedown';
-var MOUSEMOVE = 'mousemove';
-
-function $(id){return _document.getElementById(id);}
+function $(id){return document.getElementById(id);}
 function hide(ids){show(ids, true)}
 function show(ids,hidden){
   ids.split(' ').map(function(x){$(x).style.display=hidden?'none':'inline'})
@@ -375,11 +373,11 @@ function show(ids,hidden){
 var length_locked = true;
 
 String.prototype.on = function(event, handler){
-  $(this+'').on(event, handler);
+  $(this).on(event, handler);
 }
 
 String.prototype.pc = function(handler){
-  $(this+'').parentNode.on('click', handler);
+  $(this).parentNode.on('click', handler);
 }
 
 
@@ -394,7 +392,7 @@ Element.prototype.text = function(text){
 var domstore = {};
 
 Element.prototype.data = function(attr, obj){
-  if(!this.__magicDataID) this.__magicDataID = _Math.random().toString(36).substr(4);
+  if(!this.__magicDataID) this.__magicDataID = Math.random().toString(36).substr(4);
   if(!domstore[this.__magicDataID]) domstore[this.__magicDataID] = {};
   if(obj){
     domstore[this.__magicDataID][attr] = obj;
@@ -403,15 +401,15 @@ Element.prototype.data = function(attr, obj){
 }
 
 var draw,current_shape, selected_shape, shadow_shape, resize_stage, onion_skins = [], playback, fps = 15, playback_items = [], stage = {
-	x: 180,
-	y: 100, //TODO: ste proportionally to size
+	x: 220,
+	y: 120, //TODO: ste proportionally to size
 	width: 400,
 	height: 300,
 	fill: '#fff', stroke: 'none'
 }, fig_list = [], stage_rect, framestore = {}, current_frame = 0, frame_el = [];			
 
 
-function render_info(){
+setInterval(function(){
   if(shadow_shape){
     svg(shadow_shape, {
       'stroke-width': 0,
@@ -420,14 +418,14 @@ function render_info(){
     shadow_shape = null;
   }
   if(selected_shape){
-			show('delete infobox');
+			show('delete IB');
 			$('type').text(selected_shape.T)
 
 			if(selected_shape.T != 'root'){
         hide('makefig');
         show('info')
-        $('angle').text(_Math.floor(selected_shape.R*deg2rad))
-        $('length').text(_Math.floor(selected_shape.length))
+        $('angle').text(Math.floor(selected_shape.R*deg2rad))
+        $('length').text(Math.floor(selected_shape.length))
         $('color').style.color = selected_shape.color
         $('color').text(selected_shape.color);
         $('width').text(selected_shape.width);
@@ -441,21 +439,19 @@ function render_info(){
 			  stroke: '#c598ec',
 			  'stroke-width': '5px'
 			})
-  }else hide('delete info makefig infobox');
+  }else hide('delete info makefig IB');
   
-}
-
-setInterval(render_info, 100);
+}, 9);
 
 
 
 
 function addFrame(noselect){
-  var td = _document.createElement('td');
+  var td = document.createElement('td');
   var framenum = frame_el.length;
   td.className = 'border';
   td.id = 'frame'+framenum;
-  var div = _document.createElement('div');
+  var div = document.createElement('div');
   div.className = 'frame';
   //$(div).data('framenum', frame_el.length);
   frame_el.push(div);
@@ -463,7 +459,7 @@ function addFrame(noselect){
   //td.innerHTML = 'frame ' + frame_el.length;
   
   td.appendChild(div);
-  _document.getElementById('timeline').insertBefore(td,_document.getElementById('next'));
+  document.getElementById('timeline').insertBefore(td,document.getElementById('next'));
   
   td.on('click', function(e){
 		if(playback) exit_playback();
@@ -493,16 +489,16 @@ function clone(obj){ //recursive object cloning function
 }
 
 function addFigure(name, src, out){
-  var div = _document.createElement('div');
-  var parent = _document.createElement('div');
-  parent.className = 'figcont'
+  var div = document.createElement('div');
+  var parent = document.createElement('div');
+  parent.className = 'FC'
   parent.innerHTML = ''+name+'';
   var magicness = out||src;
   parent.on('click', function(){
    var fg = clone(magicness);
     if(!playback){
-      fg.pos[0] = (_Math.floor(_Math.random()*stage.width));
-      fg.pos[1] = (_Math.floor(_Math.random()*stage.height));
+      fg.pos[0] = (Math.floor(Math.random()*stage.width));
+      fg.pos[1] = (Math.floor(Math.random()*stage.height));
       fig_list.push(new Figure(fg, draw));
     
       save_frame()
@@ -516,9 +512,9 @@ function addFigure(name, src, out){
   //TODO: do it without generating the figure twice.
   var fig = new ScaledFigure(canvas, src, 1.0);
   var box = fig.allset.getBBox()
-  fig.root.remove();
+  fig.root.X();
   
-  var scale = _Math.min(1,_Math.min(50/box.width, 50/box.height));
+  var scale = Math.min(1,Math.min(50/box.width, 50/box.height));
 
   //console.log(scale,box.width, box.height)
   //scale = 1
@@ -532,12 +528,12 @@ function addFigure(name, src, out){
   
   fig.root.move(50/2, 50/2 + 5);
   
-  fig.root.renderAll()
+  fig.root.rA()
 }
 
 this.onresize = function(){
   svg(draw, {width: innerWidth, height: innerHeight});
-  $('figcont').style.height = innerHeight - 180 + 'px'
+  $('FC').style.height = innerHeight - 180 + 'px'
 }
 
 
@@ -545,10 +541,10 @@ function update_thumb(num){
   frame_el[num].innerHTML = ''
   var canvas = svg('svg',frame_el[num], {width: 100, height: 100});
   var frame = framestore[num]
-  var scale = _Math.min(100/stage.width,100/stage.height)
+  var scale = Math.min(100/stage.width,100/stage.height)
   var canvas_figures = [];
   svg('text', canvas, {'font-size': '80px', fill: '#bbbbbb', stroke: '#bbbbbb', x: num>8?10:30, y: 75})
-    .appendChild(_document.createTextNode(num+1));
+    .appendChild(document.createTextNode(num+1));
     
   for(var i = frame.length; i -- ;)
     canvas_figures.push(new ScaledFigure(canvas, frame[i], scale));
@@ -577,7 +573,7 @@ function selectFrame(num, nosave){
   
   
   for(var i = 0, frame = []; i < fig_list.length; i++){
-    fig_list[i].root.remove()
+    fig_list[i].root.X()
   }
   fig_list = [];
   
@@ -620,7 +616,7 @@ function onion_skin(frame){
 }
 function remove_onion_skin(){
   for(var i = 0; i < onion_skins.length; i++){
-    onion_skins[i].root.remove();
+    onion_skins[i].root.X();
   }
   onion_skins = [];
 }
@@ -628,16 +624,15 @@ function remove_onion_skin(){
 
 
 function initiate_playback(){
-  hide('figcont next')
+  hide('FC next')
   remove_onion_skin()
   playback = true;
   current_shape = null;
   selected_shape = null;
-  render_info();
+  //render_info();
   
-  for(var i = 0, frame = []; i < fig_list.length; i++){
-    fig_list[i].root.remove()
-  }
+  for(var i = 0, frame = []; i < fig_list.length; i++) fig_list[i].root.X();
+  
   fig_list = [];
 
 }
@@ -647,7 +642,7 @@ function initiate_playback(){
 function play_frame(frame){
   selectFrame(frame, true); //just update the ui
   for(var i = 0; i < playback_items.length; i++){
-    playback_items[i].root.remove();
+    playback_items[i].root.X();
   }
   playback_items = [];
   if(framestore[frame]){
@@ -684,21 +679,36 @@ function autoplay(){
 
 function exit_playback(){
   playback = false
-  show('figcont')
+  show('FC')
   $('next').style.display = 'table-cell';
   for(var i = 0; i < playback_items.length; i++){
-    playback_items[i].root.remove();
+    playback_items[i].root.X();
   }
   selectFrame(current_frame, true)
 }
 
-  draw = svg('svg', $('canvas'))
+  draw = svg('svg', $('N'))
 
-  stage_rect = svg('rect', draw, stage);
+stage_rect = svg('rect', draw, stage);
+
+var is_resize;
+var resize_handle = svg('rect', draw, {
+  x: stage.x+stage.width-4,
+  y: stage.y+stage.height-4,
+  width: 8,
+  height: 8,
+  fill: '#007fff'
+})
+
+resize_handle.on('mousedown', function(){
+  is_resize = true;
+});
+
+
 
 'lockswitch'.on('click',function(){
 
-  $('lockswitch').innerHTML = (length_locked = !length_locked)?'Unlock':'Lock';
+  $('lockswitch').innerHTML = (length_locked = !length_locked)?'Unlock Length':'Lock Length';
 })
 
 'playpause'.on('click',function(){
@@ -722,7 +732,7 @@ function exit_playback(){
 try{
   localStorage.test = 'works';
 }catch(err){
-  window.localStorage = {};
+  localStorage = {};
 }
 
 if(localStorage.figures){
@@ -736,9 +746,16 @@ if(localStorage.figures){
 addFrame()
 
 
-'canvas'.on('mousemove', function(event){
+'N'.on('mousemove', function(event){
   event.preventDefault()
-
+  if(is_resize){
+    stage.width = event.clientX-stage.x;
+    stage.height = event.clientY-stage.y;
+    svg(resize_handle,{
+      x: event.clientX-4,
+      y: event.clientY-4});
+    svg(stage_rect, stage);
+  }
   if(current_shape){
     if(event.shiftKey || !length_locked){
 			
@@ -747,22 +764,22 @@ addFrame()
     }else{
 			current_shape.rotate(event.clientX, event.clientY)
     }
-    current_shape.renderAll()
-    render_info();
+    current_shape.rA()
+    //render_info();
   }
   
 });
 
 
-'canvas'.on('contextmenu',function(e){
+'N'.on('contextmenu',function(e){
   e.preventDefault();
   return false;
 })
 
-'canvas'.on(MOUSEUP, function(event){
+'N'.on('mouseup', function(event){
 	event.preventDefault()
 	current_shape = null;
-  resize_stage = false;
+  is_resize = 0;
   if(!playback){
 		save_frame()
   	update_thumb(current_frame);
@@ -771,14 +788,14 @@ addFrame()
 
 
 if(location.search.substr(1).length > 5){
-  var script = _document.createElement('script');
-  script.src = 'http://simple-datastore.appspot.com/get/'+location.search.substr(1)+'?callback=public_expand_save';
-  _document.body.appendChild(script);
+  var script = document.createElement('script');
+  script.src = host+'get/'+location.search.substr(1)+'?callback=public_expand_save';
+  document.body.appendChild(script);
 }
 
 
-window.public_expand_save = function(obj){
-  expand_save(obj)
+this.public_expand_save = function(obj){
+  expand_save(obj);
 }
 
 'makefig'.on('click', function(){
@@ -786,7 +803,7 @@ window.public_expand_save = function(obj){
   if(json.C.length == 0 && !magic){
     return alert('You probably want to add more shapes to it first');
   }
-  var name = prompt('Enter a name for the figure you want to add to the library.', 'Fig'+_Math.floor(_Math.random()*993588125));
+  var name = prompt('Enter a name for the figure you want to add to the library.', 'Fig'+Math.floor(Math.random()*993588125));
   if(name){
     addFigure(name, json);   
     var existing = localStorage.figures?JSON.parse(localStorage.figures):[]; 
@@ -795,20 +812,20 @@ window.public_expand_save = function(obj){
 })
 
 function update_selected(){
-  if(selected_shape) selected_shape.renderAll();
+  if(selected_shape) selected_shape.rA();
 }
 
 'line'.on('click',function(){
-  new Line(selected_shape,_Math.floor(420*_Math.random())%360);
+  new Line(selected_shape,Math.floor(420*Math.random())%360);
   update_selected();
 })
 'circle'.on('click',function(){
-  new Circle(selected_shape,_Math.floor(420*_Math.random())%360);
+  new Circle(selected_shape,Math.floor(420*Math.random())%360);
   update_selected();
 })
 'delete'.on('click',function(){
   if(confirm('Are you sure you want to delete this '+(selected_shape.T=='root'?'figure':selected_shape.T)+'?')){
-    selected_shape.remove();
+    selected_shape.X();
     selected_shape = null;
   }
 })
@@ -816,18 +833,26 @@ function update_selected(){
 
 
 'share'.on('click', function(){
-  var postID = _Math.random().toString(36).substr(4, 8);
-  var url = "http://simple-datastore.appspot.com/set/"+postID;
+  var postID = Math.random().toString(36).substr(4, 8);
+  var url = host+"set/"+postID;
   var data = 'data='+encodeURIComponent(JSON.stringify(compressed_save()));
   var request = new XMLHttpRequest();
   if("withCredentials" in request){
    // Firefox 3.5 and Safari 4
    request.open('POST', url, true);
+   request.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+   request.onreadystatechange = function(){
+    if(request.readyState>3) location.search='?'+postID ;
+   }
    request.send(data);
   }else if (XDomainRequest){
    // IE8
    var xdr = new XDomainRequest();
+   xdr.contentType = 'application/x-www-form-urlencoded';
    xdr.open("post", url);
+   xdr.onload = function(){
+    location.search='?'+postID 
+   }
    xdr.send(data);
   }
 })
