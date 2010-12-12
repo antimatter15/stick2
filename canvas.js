@@ -1,6 +1,9 @@
 function canvas_render_frame(frame, context){
 	var shapes = framestore[frame]
-	context.clearRect(0,0,stage.width, stage.height)
+	//context.clearRect(0,0,stage.width, stage.height)
+  context.fillStyle = "rgb(255,255,255)";  
+  context.fillRect(0,0,stage.width, stage.height) //GIF can't do transparent so do white
+
 	for(var i = 0; i < shapes.length; i++){
 		CanvasDrawFigure(shapes[i], context)
 	}

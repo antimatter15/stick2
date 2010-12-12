@@ -12,7 +12,7 @@
 
 <meta name = "viewport" content = "user-scalable=no, width=device-height">
 </head>
-<body style="margin: 0; border: 0; padding: 0;overflow:hidden">
+<body style="margin: 0; border: 0; padding: 0;">
   <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
 
     
@@ -21,7 +21,12 @@
   <script type="text/javascript" src="datastore.js"></script>
   <script type="text/javascript" src="colorwheel.js"></script>
 	<script type="text/javascript" src="autopost.js"></script>
-	<script type="text/javascript" src="touchscroll.min.js"></script>
+	<script type="text/javascript" src="canvas.js"></script>
+	
+  <script src="jsgif/LZWEncoder.js"></script>
+  <script src="jsgif/NeuQuant.js"></script>
+  <script src="jsgif/GIFEncoder.js"></script>
+		
 	<script src="json2.js" type="text/javascript"></script>
   
   <script type="text/javascript">
@@ -465,7 +470,10 @@
     $(document).ready(function(){
 	document.documentElement.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
       draw = Raphael("canvas")
-      draw.setSize($(window).width(),$(window).height())
+      draw.setSize(innerWidth, innerHeight)
+      $("#canvas").width(innerWidth);
+      $("#canvas").height(innerHeight);
+      
       //new Person(draw);
       $("#canvas").bind(TOUCHMOVE, function(event){
 	
@@ -616,6 +624,7 @@ $("a").live("click", function(e){
       
     }
     
+
     function addFigure(name, src, out){
       var div = document.createElement("div");
       var parent = document.createElement("div");
@@ -623,7 +632,27 @@ $("a").live("click", function(e){
       parent.innerHTML = ""+name+"";
       $(parent).data("iconsrc",src);
       $(parent).data("importsrc", out||src);
+      $(parent).bind("mousedown touchstart", function(){
+        if(!$(this).data('startdown')) $(this).data("startdown", new Date  - 0);
+      })
+      $(parent).bind("mouseup touchend", {name: name}, function(e){
+        if((new Date) - $(this).data('startdown') > 1337){
+          if(confirm("Are you sure you want to delete figure \""+e.data.name+"\" from the figures library? This action can not be reverted.")){
+            $(parent).remove();
+            var existing = localStorage.figures?JSON.parse(localStorage.figures):[], changed = []; 
+            for(var i = 0; i < existing.length; i++){
+              if(existing[i].name+'' != e.data.name+''){
+               changed.push(existing[i]);
+              }
+            }
+            localStorage.figures = JSON.stringify(changed)
+            
+          }
+        }
+        $(this).data('startdown',null)
+      })
       $(parent).click(function(){
+        
         var fg = jQuery.extend(true, $(this).data("importsrc"),{});
         //yeah, this part is quite weird
         if(!playback){
@@ -634,6 +663,8 @@ $("a").live("click", function(e){
           save_frame()
           update_thumb(current_frame);
 				}
+				//$('#figcont').hide()
+        
       })
       parent.appendChild(div)
       document.getElementById("figures").appendChild(parent);
@@ -668,9 +699,10 @@ $("a").live("click", function(e){
     }
     
     $(window).resize(function(){
-      draw.setSize($(window).width(),$(window).height())
-      $("#figcont").css("height",($(window).height() - 180) + "px")
-        
+      $("#figcont").css("height",(innerHeight- (40 + 149 + 10)) + "px")
+       draw.setSize(innerWidth - 15, innerHeight - 15)
+      $("#canvas").width(innerWidth - 15);
+      $("#canvas").height(innerHeight - 15);
     })
     
     function update_thumb(num){
@@ -856,7 +888,7 @@ $("a").live("click", function(e){
       
       $("#next").click(function(){
         addFrame()
-        //$("#next")[0].scrollIntoView()
+        $("#next")[0].scrollIntoView(false)
       })
       
       $("#timeline td.border").live("click",function(){
@@ -884,12 +916,54 @@ $("a").live("click", function(e){
       addFrame()
       
 
-      timescroller = new TouchScroll(document.querySelector("#timescroll"), {elastic: true});
+      //timescroller = new TouchScroll(document.querySelector("#timescroll"), {elastic: true});
 
 
-      figscroller = new TouchScroll(document.querySelector("#figcont"), {elastic: true});
+      //figscroller = new TouchScroll(document.querySelector("#figcont"), {elastic: true});
 
     })
+
+function exportGIF(){
+  var d = document.createElement('div');
+  d.className = "convstatus";
+  var sta = document.createElement('div');
+  d.appendChild(sta);
+  document.body.appendChild(d);
+  var c = document.createElement('canvas');
+  c.className = "previewctx";
+  c.width = stage.width;
+  c.height = stage.height;
+  d.appendChild(c);
+  sta.innerHTML = "beginning conversion"
+  var x = c.getContext('2d');
+  
+  var encoder = new GIFEncoder();
+  encoder.setRepeat(0); //auto-loop
+  encoder.setDelay(Math.round(1000/fps));
+  encoder.setSize(stage.width,stage.height);
+  encoder.start();
+  var fr = 0;
+  var loop = function(){
+    if(framestore[fr]){
+      sta.innerHTML = "converting frame "+fr
+      canvas_render_frame(fr, x);
+      encoder.addFrame(x);
+      setTimeout(loop, 0);
+      fr++;
+      
+    }else{
+      sta.innerHTML = "done converting all frames.";
+      encoder.finish();
+      var dataurl = 'data:image/gif;base64,'+btoa(encoder.stream().getData());
+      setTimeout(function(){
+        d.innerHTML = "GIF is done converting! Here's a link to the animation that you can save and share: <a href='"+dataurl+"'>animation.gif</a>";
+      },1000);
+    }
+  }
+  loop();
+  
+}
+
 
 function deflate_shape(shape){
 	var map = {
@@ -1049,7 +1123,7 @@ function inflate_shape(obj){
       border-radius: 10px;
 			-webkit-border-radius: 10px;
       height: 70px;
-      overflow:hidden;
+      /*overflow:hidden;*/
     }
 
 /*
@@ -1058,6 +1132,20 @@ function inflate_shape(obj){
       color: white;
     }
   */
+  
+.previewctx {
+  border: 1px solid gray;
+  opacity: 0.6;
+}
+
+.convstatus {
+  position:absolute;
+  z-index: 41521;
+  top: 40px;
+  left: 40px;
+  background:url(gifbg.png);
+  border: 1px solid gray;
+}
 
 		.header {
 			position: absolute;
@@ -1101,10 +1189,10 @@ function inflate_shape(obj){
       padding: 30px;
 		}
 </style>
-<link href="touchscroll.css" rel="stylesheet"> 
-  <div style="position: absolute; left:0; width: 130px; border: 0; margin: 0; padding: 0px;height: 100%;margin-top: 40px;overflow:hidden" id="figcont">
+<!-- <link href="touchscroll.css" rel="stylesheet">  -->
+  <div style="position: absolute; overflow: auto; left:0; width: 130px; border: 0; margin: 0; padding: 0px;;margin-top: 40px;" id="figcont">
 
-  <div style="overflow:hidden" id="figures">
+  <div style="overflow:auto" id="figures">
        
     </div>
 
@@ -1165,8 +1253,8 @@ function inflate_shape(obj){
 
   
 
-  <div style="height: 129px;bottom:0;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
-  <div style="height: 129px;position: absolute;overflow:hidden; width: 100%;border: 0; margin: 0; padding: 0;" id="timescroll">
+  <div style="height: 149px;bottom:0px;position:absolute;width:100%;border: 0; margin: 0; padding: 0;background-color: #DFE8F6;"  id="timecont">
+  <div style="height: 149px;position: absolute;overflow-x:scroll; width: 100%;border: 0; margin: 0; padding: 0;" id="timescroll">
     <table style="border: 0; margin: 0; padding: 0">
       <tbody style="border: 0; margin: 0; padding: 0;">
       <tr style="border: 0; margin: 0; padding: 0" id="timeline">
@@ -1188,8 +1276,7 @@ function inflate_shape(obj){
 Hi
 </div>
 
-<div id="colorpicker" style="top: 0px; left: 0px; position: absolute;display:none">
-<button onclick="picked_color()" style="font-size: xx-large">Done</button>
-</div>
+<div id="colorpicker" style="top: 0px; left: 0px; position: absolute;display:none"><button onclick="picked_color()" style="font-size: xx-large">Done</button></div>
+
 </body>
 </html>
