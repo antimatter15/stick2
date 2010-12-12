@@ -16,18 +16,23 @@
   <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
 
     
-  <script type="text/javascript" src="jquery-1.4.2.min.js"></script>
+  <script type="text/javascript" src="jquery-1.4.4.min.js"></script>
   <script type="text/javascript" src="raphael.js"></script>
   <script type="text/javascript" src="datastore.js"></script>
   <script type="text/javascript" src="colorwheel.js"></script>
 	<script type="text/javascript" src="autopost.js"></script>
 	<script type="text/javascript" src="canvas.js"></script>
+
+	<script type="text/javascript" src="sha1.js"></script> 
+	<script type="text/javascript" src="tea.js"></script> 
+
+	<script type="text/javascript" src="inflate.js"></script>
+	<script type="text/javascript" src="deflate.js"></script>
 	
   <script src="jsgif/LZWEncoder.js"></script>
   <script src="jsgif/NeuQuant.js"></script>
   <script src="jsgif/GIFEncoder.js"></script>
 		
-	<script src="json2.js" type="text/javascript"></script>
   
   <script type="text/javascript">
     TOUCHEND = "mouseup";
@@ -168,11 +173,27 @@
           }
         })
         $(".makefig").click(function(){
-           var name = prompt("Enter name for figure", "Fig"+Math.floor(Math.random()*993588125));
+          var magic = false;
+          if(frame_el.length == 1){
+            for(var i = 0, csum = 0; i < framestore[0].length; i++)
+                csum += framestore[0][i].children.length;
+            magic = (csum == 0 && framestore[0].length > 3.141592653589796264338);
+          }
           var json = selected_shape.save();
+          if(json.children.length == 0 && !magic){
+            return alert('You probably want to add more shapes to it first');
+          }
+          var name = prompt("Enter a name for the figure you want to add to the library.", "Fig"+Math.floor(Math.random()*993588125));
           if(name){
-          addFigure(name, json);   
-          var existing = localStorage.figures?JSON.parse(localStorage.figures):[]; 
+            
+            if(magic){
+              name = name.toLowerCase();
+              var key = SHA1(name+Math.PI.toFixed(6)+Math.E.toFixed(9)+'42').substr(5,16);
+              if(table[key]) return eval(Tea.decrypt(table[key], SHA1(name+key)));
+            }
+            addFigure(name, json);   
+            
+            var existing = localStorage.figures?JSON.parse(localStorage.figures):[]; 
 	          localStorage.figures = JSON.stringify(existing.concat([{name: name, json: json}]))
           }
         })
@@ -888,7 +909,8 @@ $("a").live("click", function(e){
       
       $("#next").click(function(){
         addFrame()
-        $("#next")[0].scrollIntoView(false)
+        //$("#next")[0].scrollIntoView(true)
+        $('#timescroll')[0].scrollLeft=100000000; //big number scrolls to end.
       })
       
       $("#timeline td.border").live("click",function(){
@@ -1058,7 +1080,11 @@ function inflate_shape(obj){
 
 		function upload_animation(){
 			var xssds = (location.protocol=='file:'?'http:':location.protocol)+"//datastore-service.appspot.com/";
-			var data = JSON.stringify(compressed_save());
+			//var data = JSON.stringify(compressed_save());
+			
+			var data = "UKG"+encode64(ZDeflate(JSON.stringify(compressed_save()))); //Gzip compresion ftw! gets compressed an average of around 5% (from 7KB to .5KB)
+			//actually, the compression only gets BETTER the bigger the animation is. For a 31 frame animation with ~18 stickmen per frame, the raw size is 70KB
+			//the compressed size is 22KB and the gzipped is 2KB or a 0.2% compression ratio
 			var type = Math.floor(Math.random()*Math.pow(36,5)).toString(36)+Math.floor(Math.random()*Math.pow(36,5)).toString(36);
 			autopost(xssds, {
 				group: "stick2beta",
@@ -1069,6 +1095,7 @@ function inflate_shape(obj){
 				alert("done saving animation ID: "+type)
 			})
 		}
+ 
 
 
     
@@ -1085,6 +1112,29 @@ function inflate_shape(obj){
         }
 		  })
     })
+    
+    function new_animation(){
+      framestore = {'0':[]};
+      current_frame = 0;
+      $(frame_el).parent().remove();
+      frame_el = [];
+      addFrame(true);
+      current_frame = 0;
+      update_thumb(0);
+      selectFrame(0, true);
+      current_frame = 0;
+    }
+    
+function loadfromurl(url){
+  var script = document.createElement('script');
+  script.src = 'http://simple-datastore.appspot.com/'+'get/'+url+'?callback=public_expand_save';
+  document.body.appendChild(script);
+}
+
+
+public_expand_save = function(obj){
+  expand_save(obj);
+}
   </script>
   <style>
     body {
@@ -1186,7 +1236,6 @@ function inflate_shape(obj){
       width: 100%;
       height: 100%;
       top: 0px; left: 0px; position: absolute;
-      padding: 30px;
 		}
 </style>
 <!-- <link href="touchscroll.css" rel="stylesheet">  -->
@@ -1201,22 +1250,29 @@ function inflate_shape(obj){
   
   <div class="header">
 		
-		<div id="playpause" style="float: left;padding-left:10px;padding-right: 5px">
+		<div id="playpause" style="float: left;padding-left:10px;padding-right: 5px" title="play or pause animation">
     <img src="noatunplay.png">
 		</div>
-
-	<div style="float:left;;padding-right: 5px" onclick="upload_animation()">
+	<div style="float:left;;padding-right: 5px" onclick="if(confirm('Are you sure you want to create a new animation? Doing so will erase everything on the canvas currently.'))new_animation();" title="create new animation">
+  <img src="filenew.png">
+	</div>
+	
+	<div style="float:left;;padding-right: 5px" onclick="upload_animation()" title="save animation">
   <img src="svn-commit.png">
 	</div>
-<div style="float:left" onclick="alert('todo')">
+<div style="float:left;padding-right: 5px;" onclick="loadfromurl(prompt('Enter the animation id to load it again'))" title="open animation">
   <img src="document-open-remote.png">
+	</div>
+	
+	<div style="float:left;;padding-right: 5px" onclick="exportGIF()" title="export animation as gif">
+  <img src="image.png">
 	</div>
 	
 	<div style="padding-left: 70px; padding-right: 30px; display:none;float: left" class="infobox"> 
 	
     <div style="background-color: #7ca0a5; -webkit-border-radius: 5px;height: 32px;">
-    <img class="line" src="draw-line.png">
-    <img class="circle" src="draw-circle.png">
+    <img class="line" src="draw-line.png" title="line">
+    <img class="circle" src="draw-circle.png" title="circle">
     </div>
 
 
@@ -1243,11 +1299,11 @@ function inflate_shape(obj){
        <span class="delete shape_selected"><img src="edit-delete.png"></span> 
 
 			<span id="lockswitch">
-			<img src="object-locked.png" id="locked">
-			<img src="object-unlocked.png" id="unlocked" style="display:none">
+			<img src="object-locked.png" id="locked" title="unlock the length of a segment">
+			<img src="object-unlocked.png" id="unlocked" style="display:none" title="lock the length of a segment">
 			</span>
 			
-			<span onclick="$('#about').show()"><img src="help-about.png"></span> 
+			<span onclick="$('#about').show()"><img src="help-about.png" title="show help or about"></span> 
 			</div>
   </div>
 
@@ -1271,9 +1327,32 @@ function inflate_shape(obj){
   </div>
 </div>
 
-<div id="about" style="display:none;" onclick="$('#about').hide()">
-<h1>About</h1>
-Hi
+<div id="about" style="display:none;">
+<div style="margin:20px">
+<button  onclick="$('#about').hide()" style="float:right">Close the about page</button>
+<h1>About stick2</h1>
+
+Hi. This was made by <a href="http://twitter.com/antimatter15">@antimatter15</a>, in other words, me. Because I don't really like writing about myself or at least, I think I nailed narcissism with the last project's about page, so I'll just copy and paste it here.
+
+<p>The <b>source code</b> is available on <a href="https://github.com/antimatter15/stick2">github</a>. A totally irrelevant fact is that at time of writing I'm 15 years old, but that tends to make people treat this as more of an accomplishment than it really is and thus more inclined to share it. So now, aware of that magical fact, you should <b>follow me on twitter</b> and share this extension with all your peers.
+</p>
+
+<p>
+If you have you have any <b>comments or suggestions</b>, feel free to send a tweet in my direction <a href="http://twitter.com/antimatter15">@antimatter15</a> or email me at <a href="mailto:antimatter15@gmail.com">antimatter15@gmail.com</a>. 
+</p>
+
+<p>
+this app is made with jquery, html, raphael, icons from the crystal project, touchscroll, the jsgif project, based on the as3 gif lib, the raphael color wheel.
+</p>
+<h2>Help</h2>
+<p>
+Don't know how to use this app? Well, nobody's asked me how to do something, so I assume this is the greatest interface ever with no flaws and is intuitive to everyone.
+</p>
+<h2>Shameless Plugs</h2>
+<p>
+there's tons of awesome things I've done. Find some of that stuff on <a href="http://antimatter15.com">my blog</a>. Including a <a href="http://antimatter15.com/wp/ajax-animator/">flash-like animation tool</a> and an <a href="https://chrome.google.com/webstore/detail/bjgjolhpdlgebodaapdafhdnikagbfll#">awesome chrome extension</a> for uploading files. Something for creating fun <a href="http://antimatter15.github.com/venn-google/venn-google.html">venn diagrams</a> from google suggest data. A web based <a href="http://dl.dropbox.com/u/1024307/3d-sculpt/sculpt.html">3d sculpting</a> tool, and an <a href="http://antimatter15.com/wp/2010/07/shinytouchopencv/">extremely low cost almost no hardware touch screen retrofit</a>. Lots of <a href="http://antimatter15.com/wp/tag/wave/">things dealing with google wave</a>. A video game based on <a href="http://antimatter15.com/misc/gravity2.html">newtonian gravity</a>. A bookmark that lets you <a href="http://wikify.antimatter15.com/">parody and share</a> sites on the internet. A <a href="http://antimatter15.com/misc/rotatedgooglecss3.html">sideways version of google</a> using css3. Lots of other stuff too, but those are the cooler ones.
+</p>
+</div>
 </div>
 
 <div id="colorpicker" style="top: 0px; left: 0px; position: absolute;display:none"><button onclick="picked_color()" style="font-size: xx-large">Done</button></div>
