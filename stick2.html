@@ -8,6 +8,20 @@
         font-size: 13px;
         background-color: #DFE8F6;
   }
+
+  #timescroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .convdone {
+    padding: 40px;
+    z-index: 9999;
+    top: 100px;
+    left: 100px;
+    background-color: white;
+    border: 1px solid black;
+    position: absolute;
+  }
 </style>
 
 <meta name = "viewport" content = "user-scalable=no, width=device-height">
@@ -16,15 +30,21 @@
   <div id="canvas" style="position: absolute;top:0;left:0; width: 100%; height: 100%; top: 0px; left: 0px;margin:0;padding:0;border:0"></div>
 
     
-  <script type="text/javascript" src="jquery-1.4.4.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+
   <script type="text/javascript" src="raphael.js"></script>
   <script type="text/javascript" src="datastore.js"></script>
   <script type="text/javascript" src="colorwheel.js"></script>
 	<script type="text/javascript" src="autopost.js"></script>
+
+
 	<script type="text/javascript" src="canvas.js"></script>
 
 	<script type="text/javascript" src="sha1.js"></script> 
 	<script type="text/javascript" src="tea.js"></script> 
+
+  <script type="text/javascript" src="b64.js"></script>
+
 
 	<script type="text/javascript" src="inflate.js"></script>
 	<script type="text/javascript" src="deflate.js"></script>
@@ -32,17 +52,14 @@
   <script src="jsgif/LZWEncoder.js"></script>
   <script src="jsgif/NeuQuant.js"></script>
   <script src="jsgif/GIFEncoder.js"></script>
-		
+
+  <script src="json2.js" type="text/javascript"></script>
+
   
   <script type="text/javascript">
-    TOUCHEND = "mouseup";
-    TOUCHSTART = "mousedown";
-    TOUCHMOVE = "mousemove";
-    /*
-    TOUCHEND = "touchend";
-    TOUCHSTART = "touchstart";
-    TOUCHMOVE = "touchmove";
-  */
+    TOUCHEND = "mouseup touchend";
+    TOUCHSTART = "mousedown touchstart";
+    TOUCHMOVE = "mousemove touchmove";
 
 
     length_locked = true;
@@ -640,6 +657,10 @@ $("a").live("click", function(e){
       document.getElementById("timeline").insertBefore(td,document.getElementById("next"));
       //td.innerHTML = 
       $(window).resize();
+
+      $(td).click(function(){
+        // ios shows stuff
+      })
       
 			if(!noselect)selectFrame(frame_el.length -1);
       
@@ -907,7 +928,7 @@ $("a").live("click", function(e){
         togglePlayback()
       })
       
-      $("#next").click(function(){
+      $("#next").bind(TOUCHSTART, function(){
         addFrame()
         //$("#next")[0].scrollIntoView(true)
         $('#timescroll')[0].scrollLeft=100000000; //big number scrolls to end.
@@ -976,14 +997,56 @@ function exportGIF(){
     }else{
       sta.innerHTML = "done converting all frames.";
       encoder.finish();
-      var dataurl = 'data:image/gif;base64,'+btoa(encoder.stream().getData());
+      var b64 = btoa(encoder.stream().getData());
+      var dataurl = 'data:image/gif;base64,'+b64;
       setTimeout(function(){
-        d.innerHTML = "GIF is done converting! Here's a link to the animation that you can save and share: <a href='"+dataurl+"'>animation.gif</a>";
-      },1000);
+        d.className = "convdone";
+        d.innerHTML = "GIF is done converting! <br> Here's a link to the animation that you can save and share: <a href='"+dataurl+"'>animation.gif</a><br>";
+        btoa(encoder.stream().getData())
+        $(d).append($('<button>Upload to Imgur</button>').click(function(){
+          $('<span>uploading to imgur.....</span>').appendTo(d);
+          share(b64, function(link){
+            $(d).append(
+              $('<a>').text("Successfully Uploaded to Imgur").attr('href', link)
+            )  
+          })
+          
+        }))
+        $(d).append($('<button>Close</button>').click(function(){
+          $(d).remove();
+        }))
+      },500);
     }
   }
   loop();
   
+}
+
+
+function share(img, callback){
+    // upload to imgur using jquery/CORS
+    // https://developer.mozilla.org/En/HTTP_access_control
+    $.ajax({
+        url: 'http://api.imgur.com/2/upload.json',
+        type: 'POST',
+        data: {
+            type: 'base64',
+            // get your key here, quick and fast http://imgur.com/register/api_anon
+            key: '463e55785ac6064f0035e0af5dde7406',
+            name: (new Date).toString().split(' ').slice(1, 5).join('-') + '.gif',
+            title: 'Generated with Stick2',
+            caption: 'http://antimatter15.com/ajaxanimator/stick2/stick2.html',
+            image: img
+        },
+        dataType: 'json'
+    }).success(function(data) {
+       
+       callback(data['upload']['links']['imgur_page']);
+
+
+    }).error(function() {
+        alert('Could not reach api.imgur.com. Sorry :(');
+    });
 }
 
 
@@ -1092,7 +1155,12 @@ function inflate_shape(obj){
 				data: data,
 				act: "write"
 			}, function(){
-				alert("done saving animation ID: "+type)
+				// alert("done saving animation ID: "+type)
+
+
+        var el = $('<div>Done saving animation <b>'+type+'</b>.<br><a target="_blank" href="http://antimatter15.com/ajaxanimator/stick2/player.html?'+type+'">http://antimatter15.com/ajaxanimator/stick2/player.html?'+type+'</a><br></div>').css({'z-index':99999,position:'absolute', top: '100px', left: '100px', 'background-color': 'white', padding: '40px', border: '1px solid black'}).append($('<button>Close</button>').click(function(){
+          el.remove();
+        })).appendTo('body')
 			})
 		}
  
@@ -1191,8 +1259,8 @@ public_expand_save = function(obj){
 .convstatus {
   position:absolute;
   z-index: 41521;
-  top: 40px;
-  left: 40px;
+  top: 100px;
+  left: 100px;
   background:url(gifbg.png);
   border: 1px solid gray;
 }
